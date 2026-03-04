@@ -1,0 +1,107 @@
+{
+  "projectType": "cli-tool",
+  "projectName": "Chunker",
+  "projectDescription": "Convert Minecraft worlds between Java Edition and Bedrock Edition",
+  "theme": "aspen",
+  "primaryColor": "#4CAF50",
+  "lightColor": "#81C784",
+  "darkColor": "#388E3C",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Using Chunker",
+            "pages": [
+              "usage/cli-usage",
+              "usage/app-usage",
+              "usage/supported-versions"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "advanced/configuration",
+              "advanced/block-mappings",
+              "advanced/pruning",
+              "advanced/converter-settings",
+              "advanced/world-settings"
+            ]
+          },
+          {
+            "group": "Development",
+            "pages": [
+              "development/building",
+              "development/testing",
+              "development/contributing"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Core API",
+            "pages": [
+              "api/world-converter",
+              "api/encoding-types",
+              "api/readers-writers"
+            ]
+          },
+          {
+            "group": "Conversion",
+            "pages": [
+              "api/block-resolvers",
+              "api/item-resolvers",
+              "api/entity-resolvers"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "api/mappings",
+              "api/pruning-config",
+              "api/dimension-mapping"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Convert worlds between Java and Bedrock editions",
+    "Support for multiple Minecraft versions (1.8.8 to 1.21+)",
+    "Command-line interface for batch processing",
+    "Electron-based desktop application",
+    "Custom block and entity mappings",
+    "World pruning and optimization",
+    "Dimension mapping and world settings customization"
+  ],
+  "publicApiSurface": [
+    "com.hivemc.chunker.conversion.WorldConverter",
+    "com.hivemc.chunker.conversion.encoding.EncodingType",
+    "com.hivemc.chunker.conversion.encoding.base.reader.LevelReader",
+    "com.hivemc.chunker.conversion.encoding.base.writer.LevelWriter",
+    "com.hivemc.chunker.mapping.MappingsFile",
+    "com.hivemc.chunker.pruning.PruningConfig",
+    "CLI: -i/--inputDirectory",
+    "CLI: -o/--outputDirectory",
+    "CLI: -f/--outputFormat",
+    "CLI: -m/--blockMappings",
+    "CLI: -s/--worldSettings",
+    "CLI: -p/--pruning",
+    "CLI: -c/--converterSettings",
+    "CLI: -d/--dimensionMappings",
+    "CLI: -k/--keepOriginalNBT"
+  ]
+}
