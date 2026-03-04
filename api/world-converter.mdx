@@ -1,0 +1,359 @@
+---
+title: WorldConverter
+description: Main converter class for converting Minecraft worlds between Java and Bedrock editions
+---
+
+## Overview
+
+The `WorldConverter` class is the primary interface for converting Minecraft worlds between different formats. It provides comprehensive configuration options for controlling all aspects of the conversion process, including which game elements to process, dimension mapping, and pruning.
+
+## Class Definition
+
+```java
+package com.hivemc.chunker.conversion;
+
+public class WorldConverter implements Converter
+```
+
+**Location**: `cli/src/main/java/com/hivemc/chunker/conversion/WorldConverter.java:44`
+
+## Constructor
+
+<ParamField path="sessionID" type="UUID" required>
+  Unique identifier for the conversion session
+</ParamField>
+
+```java
+public WorldConverter(UUID sessionID)
+```
+
+## Core Methods
+
+### convert()
+
+Create and start the conversion task.
+
+```java
+public TrackedTask<Void> convert(
+    @NotNull LevelReader reader, 
+    @NotNull LevelWriter writer
+)
+```
+
+<ParamField path="reader" type="LevelReader" required>
+  The reader to use for reading the input world format
+</ParamField>
+
+<ParamField path="writer" type="LevelWriter" required>
+  The writer to use for writing the output world format
+</ParamField>
+
+<ResponseField name="TrackedTask<Void>" type="TrackedTask<Void>">
+  A task that completes when the conversion finishes. Can be used for progress tracking.
+</ResponseField>
+
+**Location**: `WorldConverter.java:518`
+
+### cancel()
+
+Cancel the conversion task.
+
+```java
+public CompletableFuture<Void> cancel(@Nullable Throwable fatalException)
+```
+
+<ParamField path="fatalException" type="Throwable">
+  An exception to use as the reason for cancellation (optional)
+</ParamField>
+
+<ResponseField name="CompletableFuture<Void>" type="CompletableFuture<Void>">
+  A future that completes when the environment has fully cancelled
+</ResponseField>
+
+**Location**: `WorldConverter.java:612`
+
+## Configuration Methods
+
+### Processing Options
+
+Control which game elements are converted:
+
+<CodeGroup>
+
+```java setProcessMaps
+public void setProcessMaps(boolean processMaps)
+```
+
+```java setProcessItems
+public void setProcessItems(boolean processItems)
+```
+
+```java setProcessEntities
+public void setProcessEntities(boolean processEntities)
+```
+
+```java setProcessBlockEntities
+public void setProcessBlockEntities(boolean processBlockEntities)
+```
+
+```java setProcessLootTables
+public void setProcessLootTables(boolean processLootTables)
+```
+
+```java setProcessBiomes
+public void setProcessBiomes(boolean processBiomes)
+```
+
+```java setProcessHeightMap
+public void setProcessHeightMap(boolean processHeightMap)
+```
+
+```java setProcessLighting
+public void setProcessLighting(boolean processLighting)
+```
+
+</CodeGroup>
+
+### Advanced Options
+
+#### setDimensionMapping()
+
+Map input dimensions to output dimensions. Dimensions not in the map are discarded.
+
+```java
+public void setDimensionMapping(
+    @Nullable Map<Dimension, Dimension> dimensionMapping
+)
+```
+
+<ParamField path="dimensionMapping" type="Map<Dimension, Dimension>">
+  Dimension mappings, or null to keep input dimensions as-is
+</ParamField>
+
+**Location**: `WorldConverter.java:128`
+
+#### setPruningConfigs()
+
+Set regions to include or exclude from the conversion.
+
+```java
+public void setPruningConfigs(
+    @Nullable Map<Dimension, PruningConfig> pruningConfigs
+)
+```
+
+<ParamField path="pruningConfigs" type="Map<Dimension, PruningConfig>">
+  Pruning configurations per dimension, or null for no pruning
+</ParamField>
+
+**Location**: `WorldConverter.java:118`
+
+#### setChangedSettings()
+
+Apply custom settings to the output level.dat file.
+
+```java
+public void setChangedSettings(@Nullable JsonObject changedSettings)
+```
+
+<ParamField path="changedSettings" type="JsonObject">
+  Key-value settings to override in the level.dat
+</ParamField>
+
+**Location**: `WorldConverter.java:498`
+
+#### setBlockMappings()
+
+Provide custom block and item mappings.
+
+```java
+public void setBlockMappings(@Nullable MappingsFileResolvers blockMappings)
+```
+
+<ParamField path="blockMappings" type="MappingsFileResolvers">
+  Custom mappings to use, or null for default mappings
+</ParamField>
+
+**Location**: `WorldConverter.java:420`
+
+#### setProcessColumnPreTransform()
+
+Enable pre-transform processing for block connections and neighbor chunk fetching.
+
+```java
+public void setProcessColumnPreTransform(boolean processColumnPreTransform)
+```
+
+<ParamField path="processColumnPreTransform" type="boolean">
+  Whether to enable pre-transform processing (default: true)
+</ParamField>
+
+**Location**: `WorldConverter.java:245`
+
+#### setLevelDBCompaction()
+
+Enable LevelDB compaction after writing (Bedrock only).
+
+```java
+public void setLevelDBCompaction(boolean levelDBCompaction)
+```
+
+<ParamField path="levelDBCompaction" type="boolean">
+  Whether to compact LevelDB after conversion
+</ParamField>
+
+**Location**: `WorldConverter.java:137`
+
+#### setPreventYBiomeBlending()
+
+Prevent vertical biome blending (Java only).
+
+```java
+public void setPreventYBiomeBlending(boolean preventYBiomeBlending)
+```
+
+<ParamField path="preventYBiomeBlending" type="boolean">
+  Whether to prevent Y-axis biome blending
+</ParamField>
+
+**Location**: `WorldConverter.java:155`
+
+#### setAllowNBTCopying()
+
+Allow copying NBT data from input to output when formats match.
+
+```java
+public void setAllowNBTCopying(boolean allowNBTCopying)
+```
+
+<ParamField path="allowNBTCopying" type="boolean">
+  Whether to allow NBT copying for same-format conversions
+</ParamField>
+
+**Location**: `WorldConverter.java:227`
+
+#### setDiscardEmptyChunks()
+
+Remove empty chunks from the output.
+
+```java
+public void setDiscardEmptyChunks(boolean discardEmptyChunks)
+```
+
+<ParamField path="discardEmptyChunks" type="boolean">
+  Whether to discard empty chunks
+</ParamField>
+
+**Location**: `WorldConverter.java:236`
+
+#### setCustomIdentifiers()
+
+Allow conversion of custom block/item identifiers.
+
+```java
+public void setCustomIdentifiers(boolean customIdentifiers)
+```
+
+<ParamField path="customIdentifiers" type="boolean">
+  Whether to allow custom identifiers (default: true)
+</ParamField>
+
+**Location**: `WorldConverter.java:254`
+
+## Status Methods
+
+### isCancelled()
+
+Check if the conversion was cancelled.
+
+```java
+public boolean isCancelled()
+```
+
+**Returns**: `true` if the conversion was cancelled
+
+**Location**: `WorldConverter.java:323`
+
+### isExceptions()
+
+Check if any exceptions occurred during conversion.
+
+```java
+public boolean isExceptions()
+```
+
+**Returns**: `true` if any exceptions were logged during conversion
+
+**Location**: `WorldConverter.java:332`
+
+### getMissingIdentifiers()
+
+Get all missing mappings found during conversion.
+
+```java
+public Multimap<MissingMappingType, String> getMissingIdentifiers()
+```
+
+**Returns**: A multimap of missing identifiers grouped by type (BLOCK, ITEM, ENTITY, etc.)
+
+**Location**: `WorldConverter.java:341`
+
+## Usage Example
+
+```java
+import com.hivemc.chunker.conversion.WorldConverter;
+import com.hivemc.chunker.conversion.encoding.EncodingType;
+import com.hivemc.chunker.conversion.encoding.base.Version;
+import java.io.File;
+import java.util.UUID;
+
+// Create a converter with a unique session ID
+WorldConverter converter = new WorldConverter(UUID.randomUUID());
+
+// Configure the conversion
+converter.setProcessMaps(true);
+converter.setProcessEntities(true);
+converter.setProcessBlockEntities(true);
+converter.setLevelDBCompaction(true);
+converter.setDiscardEmptyChunks(true);
+
+// Create reader and writer
+File inputDir = new File("path/to/java/world");
+File outputDir = new File("path/to/bedrock/world");
+
+LevelReader reader = EncodingType.JAVA
+    .createReader(inputDir, converter)
+    .orElseThrow();
+
+LevelWriter writer = EncodingType.BEDROCK
+    .createWriter(outputDir, new Version(1, 20, 0), converter)
+    .orElseThrow();
+
+// Start the conversion
+TrackedTask<Void> task = converter.convert(reader, writer);
+
+// Wait for completion
+task.getFuture().join();
+
+// Check for issues
+if (converter.isExceptions()) {
+    System.err.println("Conversion completed with errors");
+    converter.getMissingIdentifiers().forEach((type, id) -> {
+        System.err.println("Missing " + type + ": " + id);
+    });
+}
+```
+
+## Constants
+
+<ResponseField name="SIGNAL_COMPACTION" type="String">
+  Signal name used to indicate compaction has started: `"signal_compaction"`
+</ResponseField>
+
+**Location**: `WorldConverter.java:48`
+
+## See Also
+
+- [EncodingType](/api/encoding-types) - Available world formats
+- [LevelReader](/api/readers-writers#levelreader) - Reader interface
+- [LevelWriter](/api/readers-writers#levelwriter) - Writer interface

@@ -1,0 +1,446 @@
+---
+title: Readers and Writers
+description: LevelReader and LevelWriter interfaces for reading and writing world data
+---
+
+## Overview
+
+The reader and writer interfaces define the contract for reading from and writing to different Minecraft world formats. These interfaces are implemented by format-specific classes for Java Edition and Bedrock Edition.
+
+## LevelReader
+
+Interface for reading world data from a specific format.
+
+### Interface Definition
+
+```java
+package com.hivemc.chunker.conversion.encoding.base.reader;
+
+public interface LevelReader extends LevelReaderWriter
+```
+
+**Location**: `cli/src/main/java/com/hivemc/chunker/conversion/encoding/base/reader/LevelReader.java:12`
+
+### Methods
+
+#### readLevel()
+
+Read the level data and invoke the handler with the results.
+
+```java
+void readLevel(LevelConversionHandler levelConversionHandler) throws Exception
+```
+
+<ParamField path="levelConversionHandler" type="LevelConversionHandler" required>
+  The handler to receive the level data, world data, and chunk data as it's read
+</ParamField>
+
+**Throws**: `Exception` if an error occurs during reading
+
+**Location**: `LevelReader.java:18`
+
+#### readCustomLevelSetting()
+
+Read a custom level setting annotated as custom (format-specific).
+
+```java
+@Nullable
+default Object readCustomLevelSetting(
+    @NotNull CompoundTag root,
+    @NotNull String targetName,
+    @NotNull Class<?> type
+)
+```
+
+<ParamField path="root" type="CompoundTag" required>
+  The root NBT tag containing the settings
+</ParamField>
+
+<ParamField path="targetName" type="String" required>
+  The name of the custom setting to read
+</ParamField>
+
+<ParamField path="type" type="Class<?>" required>
+  The expected type of the setting value
+</ParamField>
+
+**Returns**: The setting value, or null if not found
+
+**Throws**: `IllegalArgumentException` by default - must be overridden to support custom settings
+
+**Location**: `LevelReader.java:28`
+
+#### getWarnings()
+
+Get any warnings generated during the read process.
+
+```java
+@Nullable
+default String getWarnings()
+```
+
+**Returns**: Warning message, or null if no warnings
+
+**Location**: `LevelReader.java:38`
+
+#### isReader()
+
+Check if this is a reader instance.
+
+```java
+default boolean isReader()
+```
+
+**Returns**: Always returns `true` for readers
+
+**Location**: `LevelReader.java:33`
+
+### Inherited Methods (from LevelReaderWriter)
+
+#### getEncodingType()
+
+Get the encoding type this reader handles.
+
+```java
+EncodingType getEncodingType()
+```
+
+**Returns**: The encoding type (e.g., `EncodingType.JAVA` or `EncodingType.BEDROCK`)
+
+#### getVersion()
+
+Get the Minecraft version this reader detected.
+
+```java
+Version getVersion()
+```
+
+**Returns**: The detected version of the world
+
+#### free()
+
+Clean up resources when conversion is complete.
+
+```java
+default void free() throws Exception
+```
+
+**Location**: `cli/src/main/java/com/hivemc/chunker/conversion/encoding/base/LevelReaderWriter.java:33`
+
+## LevelWriter
+
+Interface for writing world data to a specific format.
+
+### Interface Definition
+
+```java
+package com.hivemc.chunker.conversion.encoding.base.writer;
+
+public interface LevelWriter extends LevelReaderWriter
+```
+
+**Location**: `cli/src/main/java/com/hivemc/chunker/conversion/encoding/base/writer/LevelWriter.java:13`
+
+### Methods
+
+#### writeLevel()
+
+Write the level data and return a world writer for writing world-specific data.
+
+```java
+WorldWriter writeLevel(ChunkerLevel chunkerLevel) throws Exception
+```
+
+<ParamField path="chunkerLevel" type="ChunkerLevel" required>
+  The level data to write (including settings, seed, spawn point, etc.)
+</ParamField>
+
+<ResponseField name="WorldWriter" type="WorldWriter">
+  A world writer instance for writing dimension and chunk data
+</ResponseField>
+
+**Throws**: `Exception` if an error occurs during writing
+
+**Location**: `LevelWriter.java:21`
+
+#### flushLevel()
+
+Called when all level writing is complete. Used for final cleanup and flushing.
+
+```java
+default void flushLevel() throws Exception
+```
+
+**Throws**: `Exception` if an error occurs during flushing
+
+**Location**: `LevelWriter.java:28`
+
+#### writeCustomLevelSetting()
+
+Write a custom level setting annotated as custom (format-specific).
+
+```java
+default void writeCustomLevelSetting(
+    ChunkerLevelSettings chunkerLevelSettings,
+    CompoundTag output,
+    String targetName,
+    Object value
+)
+```
+
+<ParamField path="chunkerLevelSettings" type="ChunkerLevelSettings" required>
+  The level settings object
+</ParamField>
+
+<ParamField path="output" type="CompoundTag" required>
+  The output NBT tag to write the setting to
+</ParamField>
+
+<ParamField path="targetName" type="String" required>
+  The name of the custom setting
+</ParamField>
+
+<ParamField path="value" type="Object" required>
+  The value to write
+</ParamField>
+
+**Throws**: `IllegalArgumentException` by default - must be overridden to support custom settings
+
+**Location**: `LevelWriter.java:40`
+
+#### getPreTransformManager()
+
+Get the pre-transform manager for this writer (used for block connections).
+
+```java
+@Nullable
+default PreTransformManager getPreTransformManager()
+```
+
+**Returns**: The pre-transform manager, or null if not supported
+
+**Location**: `LevelWriter.java:50`
+
+#### isReader()
+
+Check if this is a reader instance.
+
+```java
+default boolean isReader()
+```
+
+**Returns**: Always returns `false` for writers
+
+**Location**: `LevelWriter.java:45`
+
+### Inherited Methods (from LevelReaderWriter)
+
+Same as LevelReader - see above.
+
+## WorldWriter
+
+Interface for writing world (dimension) data.
+
+### Interface Definition
+
+```java
+package com.hivemc.chunker.conversion.encoding.base.writer;
+
+public interface WorldWriter
+```
+
+**Location**: `cli/src/main/java/com/hivemc/chunker/conversion/encoding/base/writer/WorldWriter.java:8`
+
+### Methods
+
+#### writeWorld()
+
+Write world information and return a column writer for writing chunks.
+
+```java
+ColumnWriter writeWorld(ChunkerWorld chunkerWorld) throws Exception
+```
+
+<ParamField path="chunkerWorld" type="ChunkerWorld" required>
+  The world data to write (dimension type, generator settings, etc.)
+</ParamField>
+
+<ResponseField name="ColumnWriter" type="ColumnWriter">
+  A column writer for writing chunk data in this world
+</ResponseField>
+
+**Throws**: `Exception` if an error occurs during writing
+
+**Location**: `WorldWriter.java:16`
+
+#### flushWorld()
+
+Called when a world has finished being written.
+
+```java
+default void flushWorld(ChunkerWorld chunkerWorld) throws Exception
+```
+
+<ParamField path="chunkerWorld" type="ChunkerWorld" required>
+  The world that finished writing
+</ParamField>
+
+**Throws**: `Exception` if an error occurs during flushing
+
+**Location**: `WorldWriter.java:24`
+
+#### flushWorlds()
+
+Called when all worlds have been written.
+
+```java
+default void flushWorlds() throws Exception
+```
+
+**Throws**: `Exception` if an error occurs during flushing
+
+**Location**: `WorldWriter.java:33`
+
+## Usage Examples
+
+### Creating a Reader
+
+```java
+import com.hivemc.chunker.conversion.encoding.EncodingType;
+import com.hivemc.chunker.conversion.encoding.base.reader.LevelReader;
+import java.io.File;
+
+// Create a reader for a Java world
+File worldDir = new File("path/to/java/world");
+LevelReader reader = EncodingType.JAVA
+    .createReader(worldDir, converter)
+    .orElseThrow(() -> new IllegalArgumentException(
+        "Could not read world - unknown version or corrupted data"
+    ));
+
+// Check the detected version
+System.out.println("World version: " + reader.getVersion());
+System.out.println("Format: " + reader.getEncodingType().getName());
+
+// Get any warnings
+String warnings = reader.getWarnings();
+if (warnings != null) {
+    System.out.println("Warnings: " + warnings);
+}
+```
+
+### Creating a Writer
+
+```java
+import com.hivemc.chunker.conversion.encoding.EncodingType;
+import com.hivemc.chunker.conversion.encoding.base.Version;
+import com.hivemc.chunker.conversion.encoding.base.writer.LevelWriter;
+import java.io.File;
+
+// Create a writer for Bedrock 1.20.0
+File outputDir = new File("path/to/output");
+Version targetVersion = new Version(1, 20, 0);
+
+LevelWriter writer = EncodingType.BEDROCK
+    .createWriter(outputDir, targetVersion, converter)
+    .orElseThrow(() -> new IllegalArgumentException(
+        "Bedrock version " + targetVersion + " is not supported"
+    ));
+
+// Check the target version
+System.out.println("Writing to version: " + writer.getVersion());
+System.out.println("Format: " + writer.getEncodingType().getName());
+```
+
+### Using with WorldConverter
+
+```java
+import com.hivemc.chunker.conversion.WorldConverter;
+import com.hivemc.chunker.conversion.encoding.EncodingType;
+import com.hivemc.chunker.conversion.encoding.base.Version;
+import java.util.UUID;
+
+// Create converter
+WorldConverter converter = new WorldConverter(UUID.randomUUID());
+converter.setProcessMaps(true);
+converter.setProcessEntities(true);
+
+// Auto-detect input format
+LevelReader reader = EncodingType.findReader(
+    new File("path/to/input"),
+    converter
+).orElseThrow();
+
+// Create output writer
+LevelWriter writer = EncodingType.BEDROCK.createWriter(
+    new File("path/to/output"),
+    new Version(1, 20, 0),
+    converter
+).orElseThrow();
+
+// Start conversion
+TrackedTask<Void> task = converter.convert(reader, writer);
+task.getFuture().join();
+
+System.out.println("Conversion complete!");
+```
+
+### Auto-detect Format
+
+```java
+import com.hivemc.chunker.conversion.encoding.EncodingType;
+import java.io.File;
+
+// Automatically detect and create appropriate reader
+File unknownWorld = new File("path/to/world");
+LevelReader reader = EncodingType.findReader(unknownWorld, converter)
+    .orElseThrow(() -> new IllegalArgumentException(
+        "Could not detect world format. Supported formats: Java, Bedrock"
+    ));
+
+String format = reader.getEncodingType().getName();
+String version = reader.getVersion().toString();
+
+System.out.println("Detected " + format + " Edition v" + version);
+```
+
+## Constructor Interfaces
+
+### EncoderLevelReaderConstructor
+
+Functional interface for creating readers.
+
+```java
+package com.hivemc.chunker.conversion.encoding;
+
+@FunctionalInterface
+public interface EncoderLevelReaderConstructor<T extends LevelReader> {
+    Optional<? extends T> construct(File inputDirectory, Converter converter);
+}
+```
+
+**Location**: `cli/src/main/java/com/hivemc/chunker/conversion/encoding/EncoderLevelReaderConstructor.java:14`
+
+### EncoderLevelWriterConstructor
+
+Functional interface for creating writers.
+
+```java
+package com.hivemc.chunker.conversion.encoding;
+
+@FunctionalInterface
+public interface EncoderLevelWriterConstructor<T extends LevelWriter> {
+    Optional<? extends T> construct(
+        File outputDirectory,
+        Version outputVersion,
+        Converter converter
+    );
+}
+```
+
+**Location**: `cli/src/main/java/com/hivemc/chunker/conversion/encoding/EncoderLevelWriterConstructor.java:15`
+
+## See Also
+
+- [WorldConverter](/api/world-converter) - Main conversion orchestrator
+- [EncodingType](/api/encoding-types) - Format type registry

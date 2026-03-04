@@ -1,0 +1,446 @@
+---
+title: 'PruningConfig API'
+description: 'Control which world regions to keep or remove during conversion'
+icon: 'scissors'
+---
+
+## Overview
+
+The `PruningConfig` class allows you to selectively keep or remove regions of your world during conversion. This is useful for reducing world size, removing unwanted areas, or extracting specific regions.
+
+## Class: PruningConfig
+
+**Package:** `com.hivemc.chunker.pruning`
+
+```java
+public class PruningConfig
+```
+
+The pruning configuration for a world specifying what regions should be kept or deleted.
+
+## Constructors
+
+### PruningConfig()
+
+Create an empty pruning config.
+
+```java
+PruningConfig config = new PruningConfig();
+```
+
+### PruningConfig(boolean include, List&lt;PruningRegion&gt; regions)
+
+Create a pruning config for the world.
+
+<ParamField path="include" type="boolean" required>
+  Whether the regions should be included (true) or excluded (false)
+</ParamField>
+
+<ParamField path="regions" type="List<PruningRegion>" required>
+  The regions to use for the pruning config
+</ParamField>
+
+```java
+List<PruningRegion> regions = new ArrayList<>();
+regions.add(new PruningRegion(-10, -10, 10, 10));
+
+// Keep only the specified regions
+PruningConfig config = new PruningConfig(true, regions);
+```
+
+## Methods
+
+### isInclude()
+
+Determine whether regions should be included or excluded.
+
+<ResponseField name="return" type="boolean">
+  True if the regions should be included and outside of it should be excluded. False if the regions should be excluded and outside of it should be included.
+</ResponseField>
+
+```java
+boolean isInclusive = config.isInclude();
+```
+
+### getRegions()
+
+Get a list of regions that should be kept or deleted.
+
+<ResponseField name="return" type="List<PruningRegion>">
+  The list of the regions
+</ResponseField>
+
+```java
+List<PruningRegion> regions = config.getRegions();
+```
+
+## Class: PruningRegion
+
+**Package:** `com.hivemc.chunker.pruning`
+
+```java
+public class PruningRegion
+```
+
+Represents a region which should be kept or deleted.
+
+### Constructors
+
+#### PruningRegion()
+
+Create an empty pruning region.
+
+```java
+PruningRegion region = new PruningRegion();
+```
+
+#### PruningRegion(int minChunkX, int minChunkZ, int maxChunkX, int maxChunkZ)
+
+Create a pruning region.
+
+<ParamField path="minChunkX" type="int" required>
+  The minimum chunk X coordinate of the region
+</ParamField>
+
+<ParamField path="minChunkZ" type="int" required>
+  The minimum chunk Z coordinate of the region
+</ParamField>
+
+<ParamField path="maxChunkX" type="int" required>
+  The maximum chunk X coordinate of the region
+</ParamField>
+
+<ParamField path="maxChunkZ" type="int" required>
+  The maximum chunk Z coordinate of the region
+</ParamField>
+
+```java
+// Create a region from chunk (-10, -10) to chunk (10, 10)
+PruningRegion region = new PruningRegion(-10, -10, 10, 10);
+```
+
+### Methods
+
+#### getMinChunkX()
+
+<ResponseField name="return" type="int">
+  The minimum chunk X coordinate
+</ResponseField>
+
+#### getMinChunkZ()
+
+<ResponseField name="return" type="int">
+  The minimum chunk Z coordinate
+</ResponseField>
+
+#### getMaxChunkX()
+
+<ResponseField name="return" type="int">
+  The maximum chunk X coordinate
+</ResponseField>
+
+#### getMaxChunkZ()
+
+<ResponseField name="return" type="int">
+  The maximum chunk Z coordinate
+</ResponseField>
+
+## Understanding Chunk Coordinates
+
+<Info>
+  Chunk coordinates are different from block coordinates. To convert:
+  - **Chunk X** = Block X ÷ 16 (rounded down)
+  - **Chunk Z** = Block Z ÷ 16 (rounded down)
+  
+  For example, block coordinates (100, 64, 200) = chunk coordinates (6, 12)
+</Info>
+
+## Usage Examples
+
+### Keep Only Spawn Area
+
+Keep only a 20x20 chunk area around spawn (0,0):
+
+```java
+import com.hivemc.chunker.pruning.PruningConfig;
+import com.hivemc.chunker.pruning.PruningRegion;
+import java.util.ArrayList;
+import java.util.List;
+
+// Create a region around spawn
+List<PruningRegion> regions = new ArrayList<>();
+regions.add(new PruningRegion(-10, -10, 10, 10));
+
+// Include only this region (exclude everything else)
+PruningConfig config = new PruningConfig(true, regions);
+```
+
+### Remove Specific Areas
+
+Remove unwanted areas while keeping the rest:
+
+```java
+List<PruningRegion> regionsToRemove = new ArrayList<>();
+
+// Remove area 1
+regionsToRemove.add(new PruningRegion(50, 50, 100, 100));
+
+// Remove area 2
+regionsToRemove.add(new PruningRegion(-50, -50, -25, -25));
+
+// Exclude these regions (keep everything else)
+PruningConfig config = new PruningConfig(false, regionsToRemove);
+```
+
+### Multiple Inclusion Regions
+
+Keep multiple separate areas:
+
+```java
+List<PruningRegion> keepRegions = new ArrayList<>();
+
+// Keep spawn area
+keepRegions.add(new PruningRegion(-10, -10, 10, 10));
+
+// Keep village area
+keepRegions.add(new PruningRegion(100, 50, 150, 100));
+
+// Keep end portal area
+keepRegions.add(new PruningRegion(-100, -80, -50, -30));
+
+PruningConfig config = new PruningConfig(true, keepRegions);
+```
+
+## CLI Integration
+
+### Using JSON File
+
+Create a `pruning.chunker.json` file:
+
+```json
+{
+  "include": true,
+  "regions": [
+    {
+      "minChunkX": -10,
+      "minChunkZ": -10,
+      "maxChunkX": 10,
+      "maxChunkZ": 10
+    }
+  ]
+}
+```
+
+Then use it with the CLI:
+
+<CodeGroup>
+```bash Via Parameter
+java -jar Chunker.jar \
+  --inputDirectory myWorld \
+  --outputFormat JAVA_1_20_5 \
+  --outputDirectory converted \
+  --pruning pruning.chunker.json
+```
+
+```bash Auto-load from World
+# Place file as: myWorld/pruning.chunker.json
+java -jar Chunker.jar \
+  --inputDirectory myWorld \
+  --outputFormat JAVA_1_20_5 \
+  --outputDirectory converted
+```
+
+```bash Inline JSON
+java -jar Chunker.jar \
+  --inputDirectory myWorld \
+  --outputFormat JAVA_1_20_5 \
+  --outputDirectory converted \
+  --pruning '{"include":true,"regions":[{"minChunkX":-10,"minChunkZ":-10,"maxChunkX":10,"maxChunkZ":10}]}'
+```
+</CodeGroup>
+
+## Per-Dimension Pruning
+
+Pruning can be configured separately for each dimension (Overworld, Nether, The End):
+
+```json
+{
+  "configs": [
+    {
+      "include": true,
+      "regions": [
+        {
+          "minChunkX": -20,
+          "minChunkZ": -20,
+          "maxChunkX": 20,
+          "maxChunkZ": 20
+        }
+      ]
+    },
+    {
+      "include": true,
+      "regions": [
+        {
+          "minChunkX": -10,
+          "minChunkZ": -10,
+          "maxChunkX": 10,
+          "maxChunkZ": 10
+        }
+      ]
+    },
+    {
+      "include": false,
+      "regions": []
+    }
+  ]
+}
+```
+
+The configs array is ordered by dimension:
+- Index 0: Overworld
+- Index 1: Nether
+- Index 2: The End
+
+## Programmatic Usage
+
+Integrate pruning into the WorldConverter:
+
+```java
+import com.hivemc.chunker.conversion.WorldConverter;
+import com.hivemc.chunker.conversion.intermediate.world.Dimension;
+import com.hivemc.chunker.pruning.PruningConfig;
+import com.hivemc.chunker.pruning.PruningRegion;
+import java.util.*;
+
+// Create converter
+WorldConverter worldConverter = new WorldConverter(UUID.randomUUID());
+
+// Create pruning config for overworld
+List<PruningRegion> overworldRegions = new ArrayList<>();
+overworldRegions.add(new PruningRegion(-10, -10, 10, 10));
+PruningConfig overworldConfig = new PruningConfig(true, overworldRegions);
+
+// Create pruning config for nether
+List<PruningRegion> netherRegions = new ArrayList<>();
+netherRegions.add(new PruningRegion(-5, -5, 5, 5));
+PruningConfig netherConfig = new PruningConfig(true, netherRegions);
+
+// Apply per-dimension pruning
+Map<Dimension, PruningConfig> pruningConfigs = new HashMap<>();
+pruningConfigs.put(Dimension.OVERWORLD, overworldConfig);
+pruningConfigs.put(Dimension.NETHER, netherConfig);
+// The End will not be pruned (not included in map)
+
+worldConverter.setPruningConfigs(pruningConfigs);
+```
+
+## Coordinate Calculation Helper
+
+Convert block coordinates to chunk coordinates:
+
+```java
+public class ChunkCoordinateHelper {
+    /**
+     * Convert block coordinate to chunk coordinate
+     */
+    public static int blockToChunk(int blockCoordinate) {
+        return Math.floorDiv(blockCoordinate, 16);
+    }
+    
+    /**
+     * Convert chunk coordinate to block coordinate (minimum)
+     */
+    public static int chunkToBlock(int chunkCoordinate) {
+        return chunkCoordinate * 16;
+    }
+}
+
+// Usage
+int blockX = 100;
+int chunkX = ChunkCoordinateHelper.blockToChunk(blockX); // Returns 6
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Test with backups">
+    Always test pruning on a backup copy of your world first. Pruned data cannot be recovered.
+  </Accordion>
+  
+  <Accordion title="Use include mode for large removals">
+    If you want to keep only small areas, use include mode. If you want to remove small areas, use exclude mode.
+  </Accordion>
+  
+  <Accordion title="Verify chunk coordinates">
+    Double-check your chunk coordinate calculations. Use F3 in-game to see chunk boundaries.
+  </Accordion>
+  
+  <Accordion title="Consider dimension sizes">
+    The Nether is typically 1/8th the size of the Overworld. Adjust your region sizes accordingly.
+  </Accordion>
+  
+  <Accordion title="Account for structure generation">
+    Leave some margin around important structures to ensure they generate correctly.
+  </Accordion>
+</AccordionGroup>
+
+## Common Patterns
+
+### Reduce World Size for Server
+
+```json
+{
+  "include": true,
+  "regions": [
+    {
+      "minChunkX": -100,
+      "minChunkZ": -100,
+      "maxChunkX": 100,
+      "maxChunkZ": 100
+    }
+  ]
+}
+```
+
+### Extract Specific Build
+
+```json
+{
+  "include": true,
+  "regions": [
+    {
+      "minChunkX": 50,
+      "minChunkZ": 50,
+      "maxChunkX": 75,
+      "maxChunkZ": 75
+    }
+  ]
+}
+```
+
+### Remove Griefed Areas
+
+```json
+{
+  "include": false,
+  "regions": [
+    {
+      "minChunkX": 20,
+      "minChunkZ": 30,
+      "maxChunkX": 35,
+      "maxChunkZ": 45
+    }
+  ]
+}
+```
+
+## Related APIs
+
+<CardGroup cols={2}>
+  <Card title="MappingsFile" icon="map" href="/api/mappings">
+    Custom block and item mappings
+  </Card>
+  <Card title="Dimension Mapping" icon="globe" href="/api/dimension-mapping">
+    Configure dimension conversion
+  </Card>
+</CardGroup>

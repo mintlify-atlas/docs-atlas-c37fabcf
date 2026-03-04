@@ -1,0 +1,471 @@
+---
+title: Item Identifier Resolvers
+description: API reference for item identifier resolvers that convert between format-specific item identifiers and Chunker's intermediate representation
+---
+
+## Overview
+
+Item identifier resolvers handle the conversion of item identifiers between Minecraft's Java and Bedrock editions and Chunker's intermediate format. These resolvers manage item properties, data values, and format-specific differences.
+
+## Base Resolver
+
+### ChunkerItemIdentifierResolver
+
+Abstract base class for converting format-specific identifiers into `ChunkerItemStack`.
+
+<ParamField path="ChunkerItemIdentifierResolver" type="abstract class">
+  Located at: `com.hivemc.chunker.conversion.encoding.base.resolver.identifier.ChunkerItemIdentifierResolver`
+</ParamField>
+
+<Note>
+  This is very similar to ChunkerBlockIdentifierResolver but allows properties to be used and has no mapping groups.
+</Note>
+
+#### Constructor
+
+```java
+public ChunkerItemIdentifierResolver(
+    Converter converter,
+    Version version,
+    boolean reader,
+    boolean defaultData
+)
+```
+
+<ParamField path="converter" type="Converter">
+  The converter instance
+</ParamField>
+
+<ParamField path="version" type="Version">
+  The version being resolved
+</ParamField>
+
+<ParamField path="reader" type="boolean">
+  Whether this is the reader (true) or writer (false)
+</ParamField>
+
+<ParamField path="defaultData" type="boolean">
+  Whether the data should default to 0 instead of absent
+</ParamField>
+
+#### Core Methods
+
+##### to()
+
+Converts a format-specific identifier to a Chunker item stack.
+
+```java
+public Optional<ChunkerItemStack> to(Identifier input)
+```
+
+<ParamField path="input" type="Identifier">
+  The input identifier from the format (e.g., `minecraft:diamond_sword`)
+</ParamField>
+
+<ParamField path="returns" type="Optional<ChunkerItemStack>">
+  The converted Chunker item stack, or empty if not supported
+</ParamField>
+
+##### from()
+
+Converts a Chunker item stack to a format-specific identifier.
+
+```java
+public Optional<Identifier> from(ChunkerItemStack input)
+```
+
+<ParamField path="input" type="ChunkerItemStack">
+  The Chunker item stack
+</ParamField>
+
+<ParamField path="returns" type="Optional<Identifier>">
+  The format-specific identifier, or empty if not supported
+</ParamField>
+
+##### isSupported()
+
+Checks if an identifier can be resolved.
+
+```java
+public boolean isSupported(String identifier)
+public boolean isSupported(ChunkerItemType chunkerItemType)
+```
+
+<ParamField path="identifier" type="String">
+  The input identifier in the format `namespace:key`
+</ParamField>
+
+<ParamField path="chunkerItemType" type="ChunkerItemType">
+  The item type object (usually ChunkerVanillaItemType enum entry)
+</ParamField>
+
+<ParamField path="returns" type="boolean">
+  True if the item can potentially be resolved
+</ParamField>
+
+#### Registration Methods
+
+These methods are used during resolver initialization to register item mappings:
+
+##### register()
+
+Registers a standard item mapping.
+
+```java
+protected void register(ItemMapping mapping)
+protected void register(ItemMapping[] mappings)
+```
+
+##### registerDuplicateInput()
+
+Registers a mapping where the input is duplicated.
+
+```java
+protected void registerDuplicateInput(ItemMapping mapping)
+protected void registerDuplicateInput(ItemMapping[] mappings)
+```
+
+##### registerDuplicateOutput()
+
+Registers a mapping where the output is duplicated.
+
+```java
+protected void registerDuplicateOutput(ItemMapping mapping)
+protected void registerDuplicateOutput(ItemMapping[] mappings)
+```
+
+##### registerOverrideInput()
+
+Overrides an existing Input → Chunker mapping.
+
+```java
+protected void registerOverrideInput(ItemMapping mapping)
+protected void registerOverrideInput(ItemMapping[] mappings)
+```
+
+##### registerOverrideOutput()
+
+Overrides an existing Chunker → Output mapping.
+
+```java
+protected void registerOverrideOutput(ItemMapping mapping)
+protected void registerOverrideOutput(ItemMapping[] mappings)
+```
+
+##### removeOutputMapping()
+
+Removes all mappings from Chunker → input of a specific type.
+
+```java
+protected void removeOutputMapping(ChunkerItemStackIdentifierType chunkerItemStackIdentifierType)
+```
+
+#### Abstract Methods
+
+##### registerMappings()
+
+Called on construction to register all item mappings. Must be implemented by subclasses.
+
+```java
+public abstract void registerMappings(Version version)
+```
+
+---
+
+## Bedrock Implementation
+
+### BedrockItemIdentifierResolver
+
+Resolver for converting between Bedrock item identifiers and ChunkerItemStackIdentifier.
+
+```java
+public BedrockItemIdentifierResolver(
+    Converter converter,
+    Version version,
+    boolean reader
+)
+```
+
+#### Special Features
+
+##### Potion ID Resolution
+
+Bedrock uses numeric IDs for potions. The resolver includes a `BedrockPotionIDResolver` for handling these conversions.
+
+```java
+// Create a potion ID resolver
+BedrockPotionIDResolver potionIDResolver = new BedrockPotionIDResolver(version);
+
+// Register each potion type
+for (ChunkerPotionType potionType : ChunkerPotionType.values()) {
+    int id = potionIDResolver.from(potionType).orElse(-1);
+    if (id < 0) continue;
+    
+    register(ItemMapping.of(
+        "minecraft:potion",
+        id,
+        ChunkerVanillaItemType.POTION,
+        ChunkerItemProperty.POTION,
+        potionType
+    ));
+}
+```
+
+##### Data Value Mappings
+
+Bedrock uses data values for item variants (e.g., different banner colors).
+
+```java
+// Banners by data value
+register(ItemMapping.flatten(
+    "minecraft:banner",
+    ImmutableMultimap.<Integer, ChunkerVanillaItemType>builder()
+        .put(15, ChunkerVanillaItemType.WHITE_BANNER)
+        .put(14, ChunkerVanillaItemType.ORANGE_BANNER)
+        .put(13, ChunkerVanillaItemType.MAGENTA_BANNER)
+        // ...
+        .build()
+));
+```
+
+#### Example Mappings
+
+<Tabs>
+  <Tab title="Simple Item">
+    ```java
+    register(ItemMapping.of(
+        "minecraft:bucket",
+        ChunkerVanillaItemType.BUCKET
+    ));
+    ```
+  </Tab>
+  
+  <Tab title="With Data Value">
+    ```java
+    register(ItemMapping.of(
+        "minecraft:arrow",
+        1,
+        ChunkerVanillaItemType.TIPPED_ARROW
+    ));
+    ```
+  </Tab>
+  
+  <Tab title="With Property">
+    ```java
+    register(ItemMapping.of(
+        "minecraft:arrow",
+        id + 1,
+        ChunkerVanillaItemType.TIPPED_ARROW,
+        ChunkerItemProperty.POTION,
+        potionType
+    ));
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Java Implementation
+
+### JavaItemIdentifierResolver
+
+Resolver for converting between Java item identifiers and ChunkerItemStackIdentifier.
+
+```java
+public JavaItemIdentifierResolver(
+    Converter converter,
+    Version version,
+    boolean reader
+)
+```
+
+#### Special Features
+
+##### Spawn Egg Mappings
+
+Java uses separate identifiers for each spawn egg type, mapped with entity properties.
+
+```java
+register(ItemMapping.of(
+    "minecraft:bat_spawn_egg",
+    ChunkerVanillaItemType.SPAWN_EGG,
+    ChunkerItemProperty.SPAWN_EGG_MOB,
+    ChunkerVanillaEntityType.BAT
+));
+```
+
+##### Banner Patterns
+
+Java handles banner patterns through separate item identifiers.
+
+```java
+register(ItemMapping.of(
+    "minecraft:creeper_banner_pattern",
+    ChunkerVanillaItemType.BANNER_PATTERN,
+    ChunkerItemProperty.BANNER_PATTERN,
+    ChunkerBannerPattern.CREEPER
+));
+```
+
+#### Example Mappings
+
+<Tabs>
+  <Tab title="Simple Item">
+    ```java
+    register(ItemMapping.of(
+        "minecraft:diamond_sword",
+        ChunkerVanillaItemType.DIAMOND_SWORD
+    ));
+    ```
+  </Tab>
+  
+  <Tab title="Spawn Egg">
+    ```java
+    register(ItemMapping.of(
+        "minecraft:zombie_spawn_egg",
+        ChunkerVanillaItemType.SPAWN_EGG,
+        ChunkerItemProperty.SPAWN_EGG_MOB,
+        ChunkerVanillaEntityType.ZOMBIE
+    ));
+    ```
+  </Tab>
+  
+  <Tab title="Music Disc">
+    ```java
+    register(ItemMapping.of(
+        "minecraft:music_disc_cat",
+        ChunkerVanillaItemType.MUSIC_DISC_CAT
+    ));
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Usage Examples
+
+### Converting an Item Identifier
+
+```java
+// Create resolver
+BedrockItemIdentifierResolver resolver = new BedrockItemIdentifierResolver(
+    converter,
+    version,
+    true // reader mode
+);
+
+// Convert from Bedrock to Chunker
+Identifier bedrockItem = new Identifier(
+    "minecraft:diamond_sword",
+    Collections.emptyMap()
+);
+Optional<ChunkerItemStack> chunkerItem = resolver.to(bedrockItem);
+
+// Convert from Chunker back to Bedrock
+ChunkerItemStack item = new ChunkerItemStack(
+    ChunkerVanillaItemType.DIAMOND_SWORD
+);
+Optional<Identifier> outputItem = resolver.from(item);
+```
+
+### Working with Item Properties
+
+```java
+// Create an item with properties
+Map<Property<? super ChunkerItemStack, ?>, Object> properties = new HashMap<>();
+properties.put(ChunkerItemProperty.POTION, ChunkerPotionType.HEALING);
+
+ChunkerItemStack potion = new ChunkerItemStack(
+    ChunkerVanillaItemType.POTION,
+    properties
+);
+
+// Convert to format-specific identifier
+Optional<Identifier> identifier = resolver.from(potion);
+```
+
+### Handling Data Values (Bedrock)
+
+```java
+// Convert Bedrock item with data value
+Identifier bedrockBanner = new Identifier(
+    "minecraft:banner",
+    Map.of("data", new StateValueInt(15)) // White banner
+);
+
+Optional<ChunkerItemStack> chunkerBanner = resolver.to(bedrockBanner);
+// Returns ChunkerItemStack with WHITE_BANNER type
+```
+
+### Checking Item Support
+
+```java
+// Check if an item is supported
+if (resolver.isSupported("minecraft:diamond")) {
+    // Item can be converted
+}
+
+// Check if a Chunker item type is supported
+if (resolver.isSupported(ChunkerVanillaItemType.DIAMOND)) {
+    // Item type can be converted
+}
+```
+
+---
+
+## Item Properties
+
+Item properties are used to store additional data about items that goes beyond the basic identifier.
+
+### Common Item Properties
+
+<ParamField path="ChunkerItemProperty.POTION" type="ChunkerPotionType">
+  Potion effect type for potions and tipped arrows
+</ParamField>
+
+<ParamField path="ChunkerItemProperty.SPAWN_EGG_MOB" type="ChunkerEntityType">
+  Entity type for spawn eggs
+</ParamField>
+
+<ParamField path="ChunkerItemProperty.BANNER_PATTERN" type="ChunkerBannerPattern">
+  Banner pattern for banner pattern items
+</ParamField>
+
+<ParamField path="ChunkerItemProperty.HORN_INSTRUMENT" type="ChunkerHornInstrument">
+  Instrument type for goat horns
+</ParamField>
+
+<ParamField path="ChunkerItemProperty.STEW_EFFECT" type="ChunkerStewEffect">
+  Suspicious stew effect
+</ParamField>
+
+### Using Item Properties
+
+```java
+// Get a property from an item stack
+ChunkerPotionType potionType = itemStack.get(ChunkerItemProperty.POTION);
+
+// Check if a property exists
+if (itemStack.has(ChunkerItemProperty.SPAWN_EGG_MOB)) {
+    ChunkerEntityType mobType = itemStack.get(ChunkerItemProperty.SPAWN_EGG_MOB);
+}
+```
+
+---
+
+## Converter Mappings
+
+Both resolvers support user-defined mappings through the converter's mapping files:
+
+```java
+// User mappings are automatically applied
+MappingsFileResolvers mappings = converter.getBlockMappings();
+if (mappings != null) {
+    // Mappings will be applied during conversion
+    Optional<Identifier> mapped = mappings.getMappings().convertItem(input, true);
+}
+```
+
+<Note>
+  User mappings allow custom item conversions to be defined without modifying the resolver code.
+</Note>

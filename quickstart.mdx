@@ -1,80 +1,280 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart
+description: Get started with Chunker in minutes and convert your first Minecraft world
 ---
 
-## Get started in three steps
+This guide will help you convert your first Minecraft world between Java and Bedrock editions using Chunker.
 
-Get your documentation site running locally and make your first customization.
+## Prerequisites
 
-### Step 1: Set up your local environment
+Before you begin, ensure you have:
+
+- Java 17 or higher installed
+- A Minecraft world to convert (backed up!)
+- At least 4GB of available RAM
+
+<Note>
+Always backup your worlds before conversion to prevent any data loss.
+</Note>
+
+## Choose your method
+
+<Tabs>
+  <Tab title="Desktop App">
+    ## Desktop application quickstart
+
+    <Steps>
+      <Step title="Download and install">
+        Download the latest Chunker desktop application from the [GitHub releases page](https://github.com/HiveGamesOSS/Chunker/releases).
+
+        <CodeGroup>
+        ```bash Windows
+        # Download Chunker.exe
+        # Double-click to run
+        ```
+
+        ```bash macOS
+        # Download Chunker.dmg
+        # Drag to Applications folder
+        ```
+
+        ```bash Linux
+        # Download Chunker.AppImage
+        chmod +x Chunker.AppImage
+        ./Chunker.AppImage
+        ```
+        </CodeGroup>
+      </Step>
+
+      <Step title="Select your world">
+        1. Click **Select World** in the application
+        2. Navigate to your Minecraft world folder:
+           - **Java**: `.minecraft/saves/WorldName`
+           - **Bedrock**: Check your game's storage location
+        3. Select the world folder (or drag and drop)
+      </Step>
+
+      <Step title="Choose output format">
+        1. Click **Export As**
+        2. Select the target edition and version
+           - For Java → Bedrock: Select a Bedrock version (e.g., 1.20.80)
+           - For Bedrock → Java: Select a Java version (e.g., 1.20.5)
+        3. Click **Continue**
+      </Step>
+
+      <Step title="Start conversion">
+        1. Review advanced settings if needed (optional)
+        2. Click **Start Conversion**
+        3. Wait for the progress bar to complete
+        4. Choose where to save your converted world
+      </Step>
+    </Steps>
+
+    <Card title="Learn more about the desktop app" icon="window" href="/usage/app-usage">
+      Explore advanced features, settings, and troubleshooting
+    </Card>
+  </Tab>
+
+  <Tab title="CLI">
+    ## Command-line quickstart
+
+    <Steps>
+      <Step title="Download the CLI">
+        Download the latest `chunker-cli.jar` from the [GitHub releases page](https://github.com/HiveGamesOSS/Chunker/releases).
+
+        ```bash
+        wget https://github.com/HiveGamesOSS/Chunker/releases/latest/download/chunker-cli.jar
+        ```
+      </Step>
+
+      <Step title="Prepare your world">
+        Locate your Minecraft world directory:
+
+        ```bash
+        # Java Edition (example paths)
+        # Windows: C:\Users\YourName\AppData\Roaming\.minecraft\saves\WorldName
+        # macOS: ~/Library/Application Support/minecraft/saves/WorldName
+        # Linux: ~/.minecraft/saves/WorldName
+
+        # Bedrock Edition (example paths)
+        # Windows: C:\Users\YourName\AppData\Local\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds\WorldName
+        # Android: /storage/emulated/0/games/com.mojang/minecraftWorlds/WorldName
+        ```
+
+        <Warning>
+        Make a backup of your world before conversion!
+        </Warning>
+      </Step>
+
+      <Step title="Run the conversion">
+        Execute Chunker with your input world, desired output format, and output directory.
+
+        <CodeGroup>
+        ```bash Java to Bedrock
+        java -jar chunker-cli.jar \
+          -i "/path/to/java/world" \
+          -f BEDROCK_1_20_80 \
+          -o "converted_world_bedrock"
+        ```
+
+        ```bash Bedrock to Java
+        java -jar chunker-cli.jar \
+          -i "/path/to/bedrock/world" \
+          -f JAVA_1_20_5 \
+          -o "converted_world_java"
+        ```
+
+        ```bash Upgrade Java version
+        java -jar chunker-cli.jar \
+          -i "my_world_1.12" \
+          -f JAVA_1_21_0 \
+          -o "my_world_1.21"
+        ```
+        </CodeGroup>
+
+        The conversion will display progress updates:
+
+        ```
+        Converting from Java 1.12.2 to Bedrock 1.20.80
+        0.00%
+        25.50%
+        50.75%
+        75.25%
+        100.00%
+        Conversion complete! Took 0h 2m 35s 420ms
+        ```
+      </Step>
+
+      <Step title="Use your converted world">
+        Your converted world is now in the output directory and ready to use!
+
+        - **Java worlds**: Copy to `.minecraft/saves/`
+        - **Bedrock worlds**: Copy to your game's worlds directory
+      </Step>
+    </Steps>
+
+    <Card title="Learn more about CLI options" icon="terminal" href="/usage/cli-usage">
+      Explore all CLI flags, advanced options, and examples
+    </Card>
+  </Tab>
+</Tabs>
+
+## Available formats
+
+To see all available output formats, run:
+
+```bash
+java -jar chunker-cli.jar -f ?
+```
+
+This will list all supported versions in the format `EDITION_VERSION`, such as:
+- `JAVA_1_20_5`
+- `BEDROCK_1_20_80`
+- `JAVA_1_21_0`
+
+<Accordion title="Common output formats">
+**Java Edition**
+- `JAVA_1_20_6` - Latest 1.20.x
+- `JAVA_1_21_0` - Minecraft 1.21
+- `JAVA_1_19_4` - Legacy 1.19
+- `JAVA_1_18_2` - Legacy 1.18
+
+**Bedrock Edition**
+- `BEDROCK_1_20_80` - Current stable
+- `BEDROCK_1_21_0` - Minecraft 1.21
+- `BEDROCK_1_19_80` - Legacy 1.19
+</Accordion>
+
+## Common conversions
+
+<CardGroup cols={2}>
+  <Card title="Java → Bedrock" icon="cubes">
+    Convert Java worlds to play on Bedrock platforms (mobile, console, Windows 10)
+    
+    ```bash
+    -f BEDROCK_1_20_80
+    ```
+  </Card>
+
+  <Card title="Bedrock → Java" icon="cube">
+    Convert Bedrock worlds to play on Java Edition
+    
+    ```bash
+    -f JAVA_1_20_5
+    ```
+  </Card>
+
+  <Card title="Version upgrade" icon="arrow-up">
+    Upgrade old worlds to newer Minecraft versions
+    
+    ```bash
+    -f JAVA_1_21_0
+    ```
+  </Card>
+
+  <Card title="Version downgrade" icon="arrow-down">
+    Downgrade worlds to older versions (use with caution)
+    
+    ```bash
+    -f JAVA_1_18_2
+    ```
+  </Card>
+</CardGroup>
+
+## Troubleshooting
 
 <AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
+  <Accordion title="Out of memory error">
+    Increase Java heap size when running Chunker:
+
+    ```bash
+    # Desktop app
+    Chunker.exe -Xmx8G
+
+    # CLI
+    java -Xmx8G -jar chunker-cli.jar -i "world" -f BEDROCK_1_20_80 -o "output"
+    ```
   </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
+
+  <Accordion title="World not detected">
+    Make sure you're selecting the world **folder** (not a region file or level.dat):
+    - Java: The folder containing `level.dat` and `region/` directory
+    - Bedrock: The folder containing `level.dat` and `db/` directory
+  </Accordion>
+
+  <Accordion title="Conversion takes too long">
+    Large worlds can take significant time. Consider:
+    - Using pruning to convert only specific regions
+    - Increasing available memory
+    - Running on a machine with better performance
+    - Using an SSD instead of HDD
+
+    See [pruning documentation](/advanced/pruning) for region selection.
+  </Accordion>
+
+  <Accordion title="Missing blocks or items">
+    Some blocks and items don't have direct equivalents between editions. Chunker uses best-effort mappings, but some content may:
+    - Convert to similar blocks
+    - Convert to placeholder blocks
+    - Be removed if no mapping exists
+
+    See [supported versions](/usage/supported-versions) for edition differences.
   </Accordion>
 </AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
-
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Advanced configuration" icon="sliders" href="/advanced/configuration">
+    Customize conversions with block mappings, pruning, and settings
+  </Card>
+  <Card title="CLI reference" icon="terminal" href="/usage/cli-usage">
+    Learn all CLI parameters and advanced usage
+  </Card>
+  <Card title="Supported versions" icon="list-check" href="/usage/supported-versions">
+    View all supported Minecraft versions
+  </Card>
+  <Card title="API integration" icon="code" href="/api/world-converter">
+    Integrate Chunker into your Java applications
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>

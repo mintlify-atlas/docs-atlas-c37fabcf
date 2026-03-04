@@ -1,0 +1,164 @@
+---
+title: Configuration Overview
+description: Learn about Chunker's configuration system and how to customize your world conversions
+---
+
+## Overview
+
+Chunker provides a flexible configuration system that allows you to customize world conversions through JSON configuration files. These files can be placed directly in your world folder or specified via command-line arguments.
+
+## Configuration Files
+
+Chunker supports five main configuration files:
+
+<CardGroup cols={2}>
+  <Card title="Block Mappings" icon="cube" href="/advanced/block-mappings">
+    Custom block and item identifier mappings
+  </Card>
+  <Card title="World Settings" icon="globe" href="/advanced/world-settings">
+    World-level property customization
+  </Card>
+  <Card title="Pruning" icon="scissors" href="/advanced/pruning">
+    Region selection and world optimization
+  </Card>
+  <Card title="Converter Settings" icon="sliders" href="/advanced/converter-settings">
+    Conversion behavior and feature flags
+  </Card>
+  <Card title="Dimension Mappings" icon="layer-group" href="/api/dimension-mapping">
+    Dimension-to-dimension mappings
+  </Card>
+</CardGroup>
+
+## File Naming Convention
+
+All configuration files follow the naming pattern `*.chunker.json`:
+
+- `block_mappings.chunker.json`
+- `converter_settings.chunker.json`
+- `dimension_mappings.chunker.json`
+- `pruning.chunker.json`
+- `world_settings.chunker.json`
+
+<Note>
+These files are automatically loaded from the input world directory if present, or can be specified via CLI flags.
+</Note>
+
+## Loading Configuration Files
+
+### Automatic Loading
+
+Place configuration files in your world folder (CLI.java:143-244):
+
+```bash
+my_world/
+├── level.dat
+├── block_mappings.chunker.json
+├── pruning.chunker.json
+├── converter_settings.chunker.json
+├── dimension_mappings.chunker.json
+└── world_settings.chunker.json
+```
+
+Chunker will automatically detect and load these files during conversion.
+
+### Command-Line Loading
+
+You can also specify configuration files via CLI flags:
+
+<CodeGroup>
+```bash File Path
+java -jar chunker-cli.jar \
+  -i "my_world" \
+  -f BEDROCK_1_20_80 \
+  -o "output" \
+  -m "block_mappings.json" \
+  -s "world_settings.json" \
+  -p "pruning.json" \
+  -c "converter_settings.json" \
+  -d "dimension_mappings.json"
+```
+
+```bash Inline JSON
+java -jar chunker-cli.jar \
+  -i "my_world" \
+  -f BEDROCK_1_20_80 \
+  -o "output" \
+  -c '{"mapConversion": false, "enableCompact": true}'
+```
+</CodeGroup>
+
+## CLI Flags Reference
+
+<ParamField path="-m / --blockMappings" type="string">
+  Path to a JSON file or inline JSON object containing block mappings (CLI.java:73-77)
+</ParamField>
+
+<ParamField path="-s / --worldSettings" type="string">
+  Path to a JSON file or inline JSON object containing world settings (CLI.java:80-84)
+</ParamField>
+
+<ParamField path="-p / --pruning" type="string">
+  Path to a JSON file or inline JSON object containing pruning settings (CLI.java:87-91)
+</ParamField>
+
+<ParamField path="-c / --converterSettings" type="string">
+  Path to a JSON file or inline JSON object containing converter settings (CLI.java:94-98)
+</ParamField>
+
+<ParamField path="-d / --dimensionMappings" type="string">
+  Path to a JSON file or inline JSON object containing dimension mappings (CLI.java:101-105)
+</ParamField>
+
+<ParamField path="-k / --keepOriginalNBT" type="boolean">
+  Keep and write original NBT data to output (only works if output format matches input) (CLI.java:108-111)
+</ParamField>
+
+## Exporting Configuration
+
+The easiest way to generate configuration files is through the Chunker web interface:
+
+1. Visit [chunker.app](https://chunker.app)
+2. Navigate to **Advanced Settings** → **Converter Settings**
+3. Configure your desired settings
+4. Export the configuration files
+5. Place them in your world folder or use with CLI flags
+
+<Note>
+You can also generate these files manually following the schemas documented in each configuration page.
+</Note>
+
+## Configuration Priority
+
+When both methods are used, CLI flags take precedence over files in the world folder:
+
+1. **Highest Priority**: CLI flag (`-m`, `-s`, `-p`, `-c`, `-d`)
+2. **Lower Priority**: File in world folder (`*.chunker.json`)
+
+<Warning>
+If you specify a configuration via CLI flag, the corresponding file in the world folder will be ignored.
+</Warning>
+
+## Error Handling
+
+Chunker validates configuration files during startup (CLI.java:149-269):
+
+- **Invalid JSON**: Conversion fails with parse error
+- **Missing required fields**: Uses default values where applicable
+- **Invalid values**: Conversion fails with descriptive error message
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Block Mappings" icon="cube" href="/advanced/block-mappings">
+    Learn how to create custom block mappings
+  </Card>
+  <Card title="Converter Settings" icon="sliders" href="/advanced/converter-settings">
+    Configure conversion behavior
+  </Card>
+  <Card title="Pruning" icon="scissors" href="/advanced/pruning">
+    Optimize worlds by removing regions
+  </Card>
+  <Card title="World Settings" icon="globe" href="/advanced/world-settings">
+    Customize world properties
+  </Card>
+</CardGroup>

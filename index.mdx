@@ -1,97 +1,211 @@
----
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
----
+<div className="relative overflow-hidden bg-gradient-to-br from-[#2E7D32] via-[#388E3C] to-[#1B5E20] dark:from-[#1B5E20] dark:via-[#2E7D32] dark:to-[#0D3B0F] py-20">
+  <div className="max-w-6xl mx-auto px-6 lg:px-8">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+      <div className="lg:col-span-7">
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
+          Convert Minecraft worlds between Java and Bedrock
+        </h1>
+        <p className="text-lg sm:text-xl text-white/90 mb-8 max-w-2xl">
+          Chunker is a powerful conversion tool that seamlessly transforms Minecraft worlds between Java Edition and Bedrock Edition, supporting versions from 1.8.8 to 1.21+.
+        </p>
+        <div className="flex flex-wrap gap-4">
+          <a
+            href="/quickstart"
+            className="inline-flex items-center px-6 py-3 rounded-lg bg-white text-[#2E7D32] font-semibold hover:bg-gray-100 transition-colors"
+          >
+            Get Started
+          </a>
+          <a
+            href="/usage/cli-usage"
+            className="inline-flex items-center px-6 py-3 rounded-lg border border-white/30 bg-white/10 text-white font-semibold hover:bg-white/20 transition-colors backdrop-blur-sm"
+          >
+            View CLI Guide
+          </a>
+        </div>
+      </div>
+      <div className="lg:col-span-5 flex justify-center">
+        <div className="relative w-full max-w-md">
+          <div className="absolute inset-0 bg-gradient-to-r from-[#4CAF50] to-[#81C784] rounded-2xl blur-3xl opacity-30"></div>
+          <div className="relative bg-white/10 dark:bg-black/20 backdrop-blur-xl rounded-2xl p-8 border border-white/20">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-lg bg-[#4CAF50] flex items-center justify-center text-white font-bold text-xl">J</div>
+                <div className="flex-1 text-white">
+                  <div className="text-sm opacity-75">Java Edition</div>
+                  <div className="font-semibold">1.8.8 - 1.21.11</div>
+                </div>
+              </div>
+              <div className="flex justify-center">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-lg bg-[#81C784] flex items-center justify-center text-white font-bold text-xl">B</div>
+                <div className="flex-1 text-white">
+                  <div className="text-sm opacity-75">Bedrock Edition</div>
+                  <div className="font-semibold">1.12.0 - 1.26.0</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-## Setting up
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <div className="text-center mb-12">
+    <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Quick start</h2>
+    <p className="text-lg text-gray-600 dark:text-gray-400">Get up and running with Chunker in just a few steps</p>
+  </div>
 
-Get your documentation site up and running in minutes.
+  <Steps>
+    <Step title="Install Chunker">
+      Download the latest release from GitHub or build from source. Chunker requires Java 17 or higher.
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+      ```bash
+      # Download the CLI jar
+      wget https://github.com/HiveGamesOSS/Chunker/releases/latest/download/chunker-cli.jar
+      ```
+    </Step>
 
-## Make it yours
+    <Step title="Prepare your world">
+      Locate your Minecraft world directory. For Java Edition, worlds are typically in `.minecraft/saves/`. For Bedrock Edition, check your game's storage location.
 
-Design a docs site that looks great and empowers your users.
+      <Note>
+        Make sure to backup your world before conversion to prevent any data loss.
+      </Note>
+    </Step>
 
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
-  </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
-  </Card>
+    <Step title="Run the conversion">
+      Execute Chunker with your input world, desired output format, and output directory.
+
+      ```bash
+      java -jar chunker-cli.jar \
+        -i "my_world" \
+        -f BEDROCK_1_20_80 \
+        -o "converted_world"
+      ```
+
+      The conversion will show progress updates and complete with timing information.
+    </Step>
+  </Steps>
+</div>
+
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <div className="text-center mb-12">
+    <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Explore documentation</h2>
+    <p className="text-lg text-gray-600 dark:text-gray-400">Everything you need to master Chunker</p>
+  </div>
+
+  <CardGroup cols={3}>
     <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
-  </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
-  </Card>
-</Columns>
+      title="CLI usage"
+      icon="terminal"
+      href="/usage/cli-usage"
+    >
+      Learn all CLI commands, flags, and advanced options for batch processing
+    </Card>
+    <Card
+      title="Desktop app"
+      icon="window"
+      href="/usage/app-usage"
+    >
+      Use the Electron-based GUI for visual world conversion
+    </Card>
+    <Card
+      title="Supported versions"
+      icon="list-check"
+      href="/usage/supported-versions"
+    >
+      View all supported Minecraft versions for Java and Bedrock
+    </Card>
+    <Card
+      title="Block mappings"
+      icon="cubes"
+      href="/advanced/block-mappings"
+    >
+      Customize how blocks are converted between editions
+    </Card>
+    <Card
+      title="Pruning"
+      icon="scissors"
+      href="/advanced/pruning"
+    >
+      Optimize world size by removing unused chunks
+    </Card>
+    <Card
+      title="API reference"
+      icon="code"
+      href="/api/world-converter"
+    >
+      Integrate Chunker into your Java applications
+    </Card>
+  </CardGroup>
+</div>
 
-## Create beautiful pages
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <div className="text-center mb-12">
+    <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Key features</h2>
+    <p className="text-lg text-gray-600 dark:text-gray-400">Why developers choose Chunker</p>
+  </div>
 
-Everything you need to create world-class documentation.
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="rounded-2xl border border-gray-200 dark:border-[#27272a] bg-gray-50 dark:bg-[#1a1d27] p-6">
+      <div className="w-12 h-12 rounded-lg bg-[#4CAF50] flex items-center justify-center text-white mb-4">
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+        </svg>
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Cross-edition conversion</h3>
+      <p className="text-gray-600 dark:text-gray-400">Convert seamlessly between Java and Bedrock editions, preserving blocks, biomes, and world data</p>
+    </div>
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+    <div className="rounded-2xl border border-gray-200 dark:border-[#27272a] bg-gray-50 dark:bg-[#1a1d27] p-6">
+      <div className="w-12 h-12 rounded-lg bg-[#4CAF50] flex items-center justify-center text-white mb-4">
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Version support</h3>
+      <p className="text-gray-600 dark:text-gray-400">Supports Minecraft versions from 1.8.8 to 1.21+, with regular updates for new releases</p>
+    </div>
 
-## Need inspiration?
+    <div className="rounded-2xl border border-gray-200 dark:border-[#27272a] bg-gray-50 dark:bg-[#1a1d27] p-6">
+      <div className="w-12 h-12 rounded-lg bg-[#4CAF50] flex items-center justify-center text-white mb-4">
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+        </svg>
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Advanced customization</h3>
+      <p className="text-gray-600 dark:text-gray-400">Custom block mappings, world pruning, dimension mapping, and converter settings for fine-grained control</p>
+    </div>
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+    <div className="rounded-2xl border border-gray-200 dark:border-[#27272a] bg-gray-50 dark:bg-[#1a1d27] p-6">
+      <div className="w-12 h-12 rounded-lg bg-[#4CAF50] flex items-center justify-center text-white mb-4">
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+        </svg>
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Multiple interfaces</h3>
+      <p className="text-gray-600 dark:text-gray-400">Use the CLI for scripting and automation, or the desktop app for visual conversions with real-time feedback</p>
+    </div>
+  </div>
+</div>
+
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <div className="rounded-2xl border border-[#4CAF50]/20 bg-gradient-to-br from-[#4CAF50]/5 to-[#81C784]/5 dark:from-[#2E7D32]/10 dark:to-[#4CAF50]/10 p-8 text-center">
+    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Ready to convert your worlds?</h2>
+    <p className="text-lg text-gray-600 dark:text-gray-400 mb-6 max-w-2xl mx-auto">
+      Join thousands of users who trust Chunker for reliable Minecraft world conversion
+    </p>
+    <a
+      href="/installation"
+      className="inline-flex items-center px-6 py-3 rounded-lg bg-[#4CAF50] text-white font-semibold hover:bg-[#388E3C] transition-colors"
+    >
+      Install Chunker
+    </a>
+  </div>
+</div>

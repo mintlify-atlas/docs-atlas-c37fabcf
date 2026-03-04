@@ -1,0 +1,497 @@
+---
+title: Converter Settings
+description: Configure conversion behavior and feature flags to customize how Chunker processes your world
+---
+
+## Overview
+
+Converter settings control the behavior of the conversion process, allowing you to enable or disable specific features, optimize performance, and customize how different game elements are processed.
+
+## Configuration File
+
+Converter settings are defined in `converter_settings.chunker.json` or passed via the `-c` flag (CLI.java:234-271).
+
+## Available Settings
+
+All settings are optional and have sensible defaults:
+
+```json converter_settings.chunker.json
+{
+  "mapConversion": true,
+  "lootTableConversion": true,
+  "itemConversion": true,
+  "blockConnections": true,
+  "enableCompact": true,
+  "discardEmptyChunks": false,
+  "preventYBiomeBlending": false
+}
+```
+
+## Settings Reference
+
+### Map Conversion
+
+<ParamField path="mapConversion" type="boolean" default="true">
+  Process and convert map items during conversion (CLI.java:251, 260)
+  
+  When disabled:
+  - Map items are not converted
+  - Map data is not processed
+  - Faster conversion if your world has many maps
+</ParamField>
+
+<CodeGroup>
+```json Enable (default)
+{
+  "mapConversion": true
+}
+```
+
+```json Disable
+{
+  "mapConversion": false
+}
+```
+</CodeGroup>
+
+<Note>
+Disabling map conversion can significantly speed up conversion for worlds with many map items.
+</Note>
+
+### Loot Table Conversion
+
+<ParamField path="lootTableConversion" type="boolean" default="true">
+  Process and convert loot tables in chests, spawners, etc. (CLI.java:252, 261)
+  
+  When disabled:
+  - Loot table data is not converted
+  - Chest contents may not convert properly
+  - Spawner configurations may not transfer correctly
+</ParamField>
+
+<CodeGroup>
+```json Enable (default)
+{
+  "lootTableConversion": true
+}
+```
+
+```json Disable
+{
+  "lootTableConversion": false
+}
+```
+</CodeGroup>
+
+<Warning>
+Disabling loot table conversion may result in lost or incorrect loot in chests, barrels, and other containers.
+</Warning>
+
+### Item Conversion
+
+<ParamField path="itemConversion" type="boolean" default="true">
+  Process and convert items in inventories, item frames, etc. (CLI.java:253, 262)
+  
+  When disabled:
+  - Items in player inventories are not converted
+  - Items in containers are not converted
+  - Item frames and other item entities are not converted
+</ParamField>
+
+<CodeGroup>
+```json Enable (default)
+{
+  "itemConversion": true
+}
+```
+
+```json Disable
+{
+  "itemConversion": false
+}
+```
+</CodeGroup>
+
+<Warning>
+Disabling item conversion will likely result in missing or incorrect items in your converted world.
+</Warning>
+
+### Block Connections
+
+<ParamField path="blockConnections" type="boolean" default="true">
+  Process block connections and states (fences, walls, glass panes, etc.) (CLI.java:254, 263)
+  
+  When disabled:
+  - Connecting blocks may not connect properly
+  - Block states may be incorrect
+  - Faster conversion but lower visual quality
+</ParamField>
+
+<CodeGroup>
+```json Enable (default)
+{
+  "blockConnections": true
+}
+```
+
+```json Disable
+{
+  "blockConnections": false
+}
+```
+</CodeGroup>
+
+<Note>
+Disabling block connections improves performance but may result in fences, walls, and similar blocks not connecting properly.
+</Note>
+
+### Enable Compact (Bedrock)
+
+<ParamField path="enableCompact" type="boolean" default="true">
+  Compact LevelDB database after conversion (Bedrock output only) (CLI.java:255, 264)
+  
+  When enabled:
+  - Bedrock worlds are compacted after conversion
+  - Reduces file size
+  - Takes additional time after conversion
+  
+  When disabled:
+  - Skips compaction step
+  - Faster conversion completion
+  - Larger output file size
+</ParamField>
+
+<CodeGroup>
+```json Enable (default)
+{
+  "enableCompact": true
+}
+```
+
+```json Disable
+{
+  "enableCompact": false
+}
+```
+</CodeGroup>
+
+<Note>
+Compaction only applies when converting to Bedrock Edition. Java Edition conversions ignore this setting.
+</Note>
+
+### Discard Empty Chunks
+
+<ParamField path="discardEmptyChunks" type="boolean" default="false">
+  Skip writing chunks that are completely empty (CLI.java:256, 265)
+  
+  When enabled:
+  - Empty chunks are not written to output
+  - Reduces output file size
+  - May affect world generation boundaries
+  
+  When disabled:
+  - All chunks are written, even if empty
+  - Preserves exact world boundaries
+</ParamField>
+
+<CodeGroup>
+```json Enable
+{
+  "discardEmptyChunks": true
+}
+```
+
+```json Disable (default)
+{
+  "discardEmptyChunks": false
+}
+```
+</CodeGroup>
+
+<Warning>
+Enabling this may affect world borders and generation if empty chunks at world edges are discarded.
+</Warning>
+
+### Prevent Y Biome Blending (Java)
+
+<ParamField path="preventYBiomeBlending" type="boolean" default="false">
+  Prevent biomes from blending vertically (Java output only) (CLI.java:257, 266)
+  
+  When enabled:
+  - Biomes don't blend on the Y axis
+  - More defined biome boundaries vertically
+  - May look less natural
+  
+  When disabled:
+  - Natural vertical biome blending
+  - Smoother transitions
+</ParamField>
+
+<CodeGroup>
+```json Enable
+{
+  "preventYBiomeBlending": true
+}
+```
+
+```json Disable (default)
+{
+  "preventYBiomeBlending": false
+}
+```
+</CodeGroup>
+
+<Note>
+This setting only applies when converting to Java Edition. Bedrock conversions ignore this setting.
+</Note>
+
+## Complete Examples
+
+### Performance Optimized
+
+Maximize conversion speed:
+
+```json converter_settings.chunker.json
+{
+  "mapConversion": false,
+  "lootTableConversion": true,
+  "itemConversion": true,
+  "blockConnections": false,
+  "enableCompact": false,
+  "discardEmptyChunks": true,
+  "preventYBiomeBlending": false
+}
+```
+
+### Quality Focused
+
+Maximize conversion accuracy:
+
+```json converter_settings.chunker.json
+{
+  "mapConversion": true,
+  "lootTableConversion": true,
+  "itemConversion": true,
+  "blockConnections": true,
+  "enableCompact": true,
+  "discardEmptyChunks": false,
+  "preventYBiomeBlending": false
+}
+```
+
+### Minimal Conversion
+
+Just blocks, no extras:
+
+```json converter_settings.chunker.json
+{
+  "mapConversion": false,
+  "lootTableConversion": false,
+  "itemConversion": false,
+  "blockConnections": false,
+  "enableCompact": false,
+  "discardEmptyChunks": true,
+  "preventYBiomeBlending": false
+}
+```
+
+<Warning>
+Minimal conversion will result in missing items, incorrect loot, and improperly connected blocks.
+</Warning>
+
+## Usage
+
+<CodeGroup>
+```bash World Folder
+# Place in world directory
+my_world/converter_settings.chunker.json
+
+# Run conversion
+java -jar chunker-cli.jar -i my_world -f BEDROCK_1_20_80 -o output
+```
+
+```bash CLI Flag
+java -jar chunker-cli.jar \
+  -i my_world \
+  -f BEDROCK_1_20_80 \
+  -o output \
+  -c converter_settings.json
+```
+
+```bash Inline JSON
+java -jar chunker-cli.jar \
+  -i my_world \
+  -f BEDROCK_1_20_80 \
+  -o output \
+  -c '{"mapConversion": false, "enableCompact": true}'
+```
+</CodeGroup>
+
+## Default Behavior
+
+When no converter settings are provided (CLI.java:251-257):
+
+- `mapConversion`: **true**
+- `lootTableConversion`: **true**
+- `itemConversion`: **true**
+- `blockConnections`: **true**
+- `enableCompact`: **true**
+- `discardEmptyChunks`: **false**
+- `preventYBiomeBlending`: **false**
+
+<Note>
+You only need to specify settings you want to change from defaults.
+</Note>
+
+## Edition-Specific Settings
+
+### Bedrock Only
+
+- `enableCompact`: Only affects Bedrock output
+
+### Java Only
+
+- `preventYBiomeBlending`: Only affects Java output
+
+### Universal
+
+- `mapConversion`
+- `lootTableConversion`
+- `itemConversion`
+- `blockConnections`
+- `discardEmptyChunks`
+
+## Performance Impact
+
+| Setting | Speed Impact | Quality Impact |
+|---------|--------------|----------------|
+| `mapConversion: false` | +10-20% faster | Lost map data |
+| `lootTableConversion: false` | +5-10% faster | Incorrect loot |
+| `itemConversion: false` | +15-25% faster | No items |
+| `blockConnections: false` | +20-30% faster | Incorrect connections |
+| `enableCompact: false` | +5-15% faster | Larger file size |
+| `discardEmptyChunks: true` | +5-10% faster | Smaller output |
+| `preventYBiomeBlending: true` | Minimal | Different biomes |
+
+<Note>
+Performance impacts are approximate and vary based on world content.
+</Note>
+
+## Exporting Settings
+
+Generate converter settings from the web UI:
+
+1. Visit [chunker.app](https://chunker.app)
+2. Go to **Advanced Settings** → **Converter Settings**
+3. Configure your preferences
+4. Export the `converter_settings.chunker.json` file
+
+## Validation
+
+Chunker validates converter settings during startup (CLI.java:246-270):
+
+- Unknown fields are ignored
+- Invalid values fall back to defaults
+- Missing settings use defaults
+
+<Warning>
+Invalid JSON will cause the conversion to fail with a parse error.
+</Warning>
+
+## Combining with Other Settings
+
+Converter settings work alongside:
+
+- **Block mappings**: Custom block conversions
+- **Pruning**: Region selection
+- **World settings**: World property changes
+- **Dimension mappings**: Dimension routing
+
+## Best Practices
+
+1. **Start with defaults** and only change what you need
+2. **Test performance settings** on copies before production use
+3. **Document your choices** for future conversions
+4. **Enable quality settings** for important worlds
+5. **Use performance settings** for test conversions
+
+## Common Configurations
+
+<AccordionGroup>
+  <Accordion title="Quick Test Conversion">
+    ```json
+    {
+      "mapConversion": false,
+      "blockConnections": false,
+      "enableCompact": false
+    }
+    ```
+    Fast conversion for testing purposes.
+  </Accordion>
+  
+  <Accordion title="Production Server">
+    ```json
+    {
+      "mapConversion": true,
+      "lootTableConversion": true,
+      "itemConversion": true,
+      "blockConnections": true,
+      "enableCompact": true,
+      "discardEmptyChunks": false
+    }
+    ```
+    Full quality conversion for live servers.
+  </Accordion>
+  
+  <Accordion title="Build Showcase">
+    ```json
+    {
+      "mapConversion": false,
+      "lootTableConversion": false,
+      "itemConversion": false,
+      "blockConnections": true,
+      "discardEmptyChunks": true
+    }
+    ```
+    Focus on blocks and structures only.
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Settings not applying">
+    - Check JSON syntax is valid
+    - Verify file name is `converter_settings.chunker.json`
+    - Ensure file is in world directory or specified with `-c` flag
+  </Accordion>
+  
+  <Accordion title="Compaction takes too long">
+    - Set `"enableCompact": false` to skip compaction
+    - Compaction time varies with world size
+    - Monitor console for compaction progress
+  </Accordion>
+  
+  <Accordion title="Missing items after conversion">
+    - Ensure `"itemConversion": true`
+    - Check `"lootTableConversion": true`
+    - Verify conversion completed successfully
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Configuration Overview" icon="gear" href="/advanced/configuration">
+    Learn about all configuration options
+  </Card>
+  <Card title="Block Mappings" icon="cube" href="/advanced/block-mappings">
+    Customize block conversions
+  </Card>
+  <Card title="Pruning" icon="scissors" href="/advanced/pruning">
+    Optimize world size
+  </Card>
+  <Card title="World Settings" icon="globe" href="/advanced/world-settings">
+    Customize world properties
+  </Card>
+</CardGroup>

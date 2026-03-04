@@ -1,0 +1,442 @@
+---
+title: 'Dimension Mapping API'
+description: 'Configure how dimensions are mapped between Java and Bedrock editions'
+icon: 'globe'
+---
+
+## Overview
+
+The `Dimension` enum and dimension mapping configuration allow you to control how dimensions (Overworld, Nether, The End) are converted between Java and Bedrock editions. You can remap dimensions to different targets or skip conversion of specific dimensions.
+
+## Enum: Dimension
+
+**Package:** `com.hivemc.chunker.conversion.intermediate.world`
+
+```java
+public enum Dimension
+```
+
+The different types of dimensions present in Minecraft.
+
+## Dimension Values
+
+<CardGroup cols={3}>
+  <Card title="OVERWORLD" icon="sun">
+    **Java ID:** 0  
+    **Bedrock ID:** 0  
+    **Identifier:** `minecraft:overworld`
+  </Card>
+  <Card title="NETHER" icon="fire">
+    **Java ID:** -1  
+    **Bedrock ID:** 1  
+    **Identifier:** `minecraft:the_nether`
+  </Card>
+  <Card title="THE_END" icon="moon">
+    **Java ID:** 1  
+    **Bedrock ID:** 2  
+    **Identifier:** `minecraft:the_end`
+  </Card>
+</CardGroup>
+
+## Methods
+
+### getJavaID()
+
+The Java ID for the dimension.
+
+<ResponseField name="return" type="byte">
+  The ID based on 0 being overworld and -1 being the nether
+</ResponseField>
+
+```java
+Dimension.OVERWORLD.getJavaID();  // Returns 0
+Dimension.NETHER.getJavaID();     // Returns -1
+Dimension.THE_END.getJavaID();    // Returns 1
+```
+
+### getBedrockID()
+
+The Bedrock ID for the dimension.
+
+<ResponseField name="return" type="byte">
+  The indexed ID for the dimension
+</ResponseField>
+
+```java
+Dimension.OVERWORLD.getBedrockID();  // Returns 0
+Dimension.NETHER.getBedrockID();     // Returns 1
+Dimension.THE_END.getBedrockID();    // Returns 2
+```
+
+### getIdentifier()
+
+Get the namespaced identifier for the dimension.
+
+<ResponseField name="return" type="String">
+  The namespaced identifier
+</ResponseField>
+
+```java
+Dimension.OVERWORLD.getIdentifier();  // Returns "minecraft:overworld"
+Dimension.NETHER.getIdentifier();     // Returns "minecraft:the_nether"
+Dimension.THE_END.getIdentifier();    // Returns "minecraft:the_end"
+```
+
+## Static Factory Methods
+
+### fromJava(byte id, Dimension fallback)
+
+Create a dimension from a Java ID.
+
+<ParamField path="id" type="byte" required>
+  The input Java dimension ID
+</ParamField>
+
+<ParamField path="fallback" type="Dimension" required>
+  The fallback to use if the ID wasn't found
+</ParamField>
+
+<ResponseField name="return" type="Dimension">
+  The dimension or fallback if it wasn't found
+</ResponseField>
+
+```java
+Dimension dim = Dimension.fromJava((byte) 0, Dimension.OVERWORLD);
+```
+
+### fromBedrock(byte id, Dimension fallback)
+
+Create a dimension from a Bedrock ID.
+
+<ParamField path="id" type="byte" required>
+  The input Bedrock dimension ID
+</ParamField>
+
+<ParamField path="fallback" type="Dimension" required>
+  The fallback to use if the ID wasn't found
+</ParamField>
+
+<ResponseField name="return" type="Dimension">
+  The dimension or fallback if it wasn't found
+</ResponseField>
+
+```java
+Dimension dim = Dimension.fromBedrock((byte) 1, Dimension.NETHER);
+```
+
+### fromJavaNBT(Tag tag, Dimension fallback)
+
+Get the dimension based on a Java NBT tag.
+
+<ParamField path="tag" type="Tag<?>" required>
+  The tag to use (string, byte or integer)
+</ParamField>
+
+<ParamField path="fallback" type="Dimension" required>
+  The fallback dimension to use if the tag can't be parsed or the ID is invalid
+</ParamField>
+
+<ResponseField name="return" type="Dimension">
+  The dimension if it was parsed, otherwise the fallback
+</ResponseField>
+
+```java
+StringTag tag = new StringTag("minecraft:the_nether");
+Dimension dim = Dimension.fromJavaNBT(tag, Dimension.OVERWORLD);
+```
+
+### fromBedrockNBT(Tag tag, Dimension fallback)
+
+Get the dimension based on a Bedrock NBT tag.
+
+<ParamField path="tag" type="Tag<?>" required>
+  The tag to use (string, byte or integer)
+</ParamField>
+
+<ParamField path="fallback" type="Dimension" required>
+  The fallback dimension to use if the tag can't be parsed or the ID is invalid
+</ParamField>
+
+<ResponseField name="return" type="Dimension">
+  The dimension if it was parsed, otherwise the fallback
+</ResponseField>
+
+## Dimension Mapping Configuration
+
+Dimension mappings control how input dimensions are converted to output dimensions. This is configured as a JSON object mapping input dimensions to output dimensions.
+
+### JSON Format
+
+```json
+{
+  "OVERWORLD": "OVERWORLD",
+  "NETHER": "NETHER",
+  "THE_END": "THE_END"
+}
+```
+
+## Usage Examples
+
+### Standard Mapping (Default)
+
+Map each dimension to itself:
+
+```json
+{
+  "OVERWORLD": "OVERWORLD",
+  "NETHER": "NETHER",
+  "THE_END": "THE_END"
+}
+```
+
+This is the default behavior if no dimension mapping is specified.
+
+### Swap Nether and End
+
+Swap the Nether and The End dimensions:
+
+```json
+{
+  "OVERWORLD": "OVERWORLD",
+  "NETHER": "THE_END",
+  "THE_END": "NETHER"
+}
+```
+
+### Combine Dimensions
+
+Merge all dimensions into the Overworld:
+
+```json
+{
+  "OVERWORLD": "OVERWORLD",
+  "NETHER": "OVERWORLD",
+  "THE_END": "OVERWORLD"
+}
+```
+
+<Warning>
+  Combining dimensions may cause chunk coordinate conflicts. Use with caution.
+</Warning>
+
+### Skip Dimensions
+
+Convert only the Overworld, skip Nether and End:
+
+```json
+{
+  "OVERWORLD": "OVERWORLD"
+}
+```
+
+Dimensions not listed in the mapping will not be converted.
+
+### Nether-Only Conversion
+
+Convert only the Nether:
+
+```json
+{
+  "NETHER": "NETHER"
+}
+```
+
+## CLI Integration
+
+Provide dimension mappings to the CLI using the `--dimensionMappings` parameter:
+
+<CodeGroup>
+```bash File Path
+java -jar Chunker.jar \
+  --inputDirectory myWorld \
+  --outputFormat JAVA_1_20_5 \
+  --outputDirectory converted \
+  --dimensionMappings dimension_mappings.chunker.json
+```
+
+```bash Inline JSON
+java -jar Chunker.jar \
+  --inputDirectory myWorld \
+  --outputFormat JAVA_1_20_5 \
+  --outputDirectory converted \
+  --dimensionMappings '{"OVERWORLD":"OVERWORLD","NETHER":"NETHER"}'
+```
+
+```bash Auto-load from World
+# Place file as: myWorld/dimension_mappings.chunker.json
+java -jar Chunker.jar \
+  --inputDirectory myWorld \
+  --outputFormat JAVA_1_20_5 \
+  --outputDirectory converted
+```
+</CodeGroup>
+
+## Programmatic Usage
+
+Integrate dimension mapping into the WorldConverter:
+
+```java
+import com.hivemc.chunker.conversion.WorldConverter;
+import com.hivemc.chunker.conversion.intermediate.world.Dimension;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+// Create converter
+WorldConverter worldConverter = new WorldConverter(UUID.randomUUID());
+
+// Create dimension mapping
+Map<Dimension, Dimension> dimensionMapping = new HashMap<>();
+dimensionMapping.put(Dimension.OVERWORLD, Dimension.OVERWORLD);
+dimensionMapping.put(Dimension.NETHER, Dimension.NETHER);
+dimensionMapping.put(Dimension.THE_END, Dimension.THE_END);
+
+// Apply dimension mapping
+worldConverter.setDimensionMapping(dimensionMapping);
+```
+
+### Advanced Example: Conditional Mapping
+
+```java
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import java.io.FileReader;
+import java.lang.reflect.Type;
+
+// Load from JSON file
+Type type = new TypeToken<Map<Dimension, Dimension>>() {}.getType();
+Map<Dimension, Dimension> dimensionMapping;
+
+try (FileReader reader = new FileReader("dimension_mappings.chunker.json")) {
+    dimensionMapping = new Gson().fromJson(reader, type);
+    worldConverter.setDimensionMapping(dimensionMapping);
+} catch (Exception e) {
+    System.err.println("Failed to load dimension mappings: " + e.getMessage());
+    // Use default mapping
+    dimensionMapping = new HashMap<>();
+    dimensionMapping.put(Dimension.OVERWORLD, Dimension.OVERWORLD);
+    dimensionMapping.put(Dimension.NETHER, Dimension.NETHER);
+    dimensionMapping.put(Dimension.THE_END, Dimension.THE_END);
+    worldConverter.setDimensionMapping(dimensionMapping);
+}
+```
+
+## Dimension IDs Reference
+
+<Info>
+  Java and Bedrock use different ID schemes for dimensions. Chunker handles the conversion automatically.
+</Info>
+
+| Dimension | Java ID | Bedrock ID | Identifier |
+|-----------|---------|------------|------------|
+| Overworld | 0 | 0 | `minecraft:overworld` |
+| Nether | -1 | 1 | `minecraft:the_nether` |
+| The End | 1 | 2 | `minecraft:the_end` |
+
+## Common Use Cases
+
+### Server Migration
+
+When migrating a server from Java to Bedrock, keep all dimensions:
+
+```json
+{
+  "OVERWORLD": "OVERWORLD",
+  "NETHER": "NETHER",
+  "THE_END": "THE_END"
+}
+```
+
+### Creative World Export
+
+Export only the Overworld for a creative build:
+
+```json
+{
+  "OVERWORLD": "OVERWORLD"
+}
+```
+
+### Custom Dimension Layouts
+
+For custom modpack/plugin worlds with alternative dimension usage:
+
+```json
+{
+  "OVERWORLD": "OVERWORLD",
+  "NETHER": "OVERWORLD",
+  "THE_END": "OVERWORLD"
+}
+```
+
+## Combining with Pruning
+
+Dimension mappings work together with pruning configurations:
+
+```java
+// Set up dimension mapping (convert only Overworld and Nether)
+Map<Dimension, Dimension> dimMapping = new HashMap<>();
+dimMapping.put(Dimension.OVERWORLD, Dimension.OVERWORLD);
+dimMapping.put(Dimension.NETHER, Dimension.NETHER);
+worldConverter.setDimensionMapping(dimMapping);
+
+// Set up pruning for each dimension
+Map<Dimension, PruningConfig> pruning = new HashMap<>();
+
+// Prune Overworld to spawn area
+List<PruningRegion> overworldRegions = new ArrayList<>();
+overworldRegions.add(new PruningRegion(-20, -20, 20, 20));
+pruning.put(Dimension.OVERWORLD, new PruningConfig(true, overworldRegions));
+
+// Prune Nether to smaller area
+List<PruningRegion> netherRegions = new ArrayList<>();
+netherRegions.add(new PruningRegion(-10, -10, 10, 10));
+pruning.put(Dimension.NETHER, new PruningConfig(true, netherRegions));
+
+worldConverter.setPruningConfigs(pruning);
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Keep dimension consistency">
+    Avoid mapping multiple input dimensions to the same output dimension unless you understand the coordinate implications.
+  </Accordion>
+  
+  <Accordion title="Test with backups">
+    Always test dimension mappings on backup worlds first, as incorrect mappings can corrupt world data.
+  </Accordion>
+  
+  <Accordion title="Consider cross-dimension features">
+    Remember that portals and other cross-dimension features may not work correctly with custom mappings.
+  </Accordion>
+  
+  <Accordion title="Document custom mappings">
+    If using non-standard dimension mappings, document why for future reference.
+  </Accordion>
+</AccordionGroup>
+
+## Limitations
+
+<Warning>
+  **Portal Connections:** Custom dimension mappings may break portal links between dimensions.
+</Warning>
+
+<Warning>
+  **Coordinate Systems:** The Nether uses a 1:8 coordinate ratio with the Overworld. Remapping may affect portal calculations.
+</Warning>
+
+<Warning>
+  **Structure Generation:** Some structures depend on specific dimensions. Remapping may cause generation issues.
+</Warning>
+
+## Related APIs
+
+<CardGroup cols={2}>
+  <Card title="MappingsFile" icon="map" href="/api/mappings">
+    Custom block and item mappings
+  </Card>
+  <Card title="Pruning Config" icon="scissors" href="/api/pruning-config">
+    Control which regions to keep or remove
+  </Card>
+</CardGroup>

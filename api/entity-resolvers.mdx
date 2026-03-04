@@ -1,0 +1,583 @@
+---
+title: Entity Resolvers
+description: API reference for entity resolvers that convert between format-specific entity data and Chunker's intermediate representation
+---
+
+## Overview
+
+Entity resolvers handle the conversion of entity data between Minecraft's Java and Bedrock editions and Chunker's intermediate format. These resolvers manage entity properties, NBT data, and format-specific entity types.
+
+## Base Resolver
+
+### EntityResolver
+
+Abstract base class that can turn format-specific data into Chunker entities. The resolver uses a hierarchy-based system, calling handlers from base to child type.
+
+<ParamField path="EntityResolver<R, D>" type="abstract class">
+  Located at: `com.hivemc.chunker.conversion.encoding.base.resolver.entity.EntityResolver`
+</ParamField>
+
+<ParamField path="R" type="type parameter">
+  The resolvers used by this format (e.g., JavaResolvers, BedrockResolvers)
+</ParamField>
+
+<ParamField path="D" type="type parameter">
+  The data class holding the encoded entity (e.g., CompoundTag for NBT)
+</ParamField>
+
+<Note>
+  The resolver calls handlers from base to child type, using the child type to construct the object. This allows logic to be shared - base entity properties don't need to be handled every time.
+</Note>
+
+#### Constructor
+
+```java
+public EntityResolver(
+    Version version,
+    R resolvers,
+    boolean preserveUnknownEntities
+)
+```
+
+<ParamField path="version" type="Version">
+  The format version
+</ParamField>
+
+<ParamField path="resolvers" type="R">
+  The resolvers used by this format
+</ParamField>
+
+<ParamField path="preserveUnknownEntities" type="boolean">
+  Whether unknown entities should be read/written as UnknownEntity
+</ParamField>
+
+#### Core Methods
+
+##### to()
+
+Converts format-specific entity data to a Chunker entity.
+
+```java
+public Optional<Entity> to(D input)
+public Optional<Entity> to(Class<? extends Entity> type, D input)
+```
+
+<ParamField path="input" type="D">
+  The input entity data (e.g., NBT CompoundTag)
+</ParamField>
+
+<ParamField path="type" type="Class<? extends Entity>">
+  Optional specific entity class to convert to
+</ParamField>
+
+<ParamField path="returns" type="Optional<Entity>">
+  The converted Chunker entity, or empty if not supported
+</ParamField>
+
+##### from()
+
+Converts a Chunker entity to format-specific data.
+
+```java
+public Optional<D> from(Entity input)
+```
+
+<ParamField path="input" type="Entity">
+  The Chunker entity
+</ParamField>
+
+<ParamField path="returns" type="Optional<D>">
+  The format-specific entity data, or empty if not supported
+</ParamField>
+
+#### Entity Lifecycle Methods
+
+These methods handle entity transformations during world processing:
+
+##### shouldRemoveBeforeProcess()
+
+Determines if an entity should be removed before column processing.
+
+```java
+public <T extends Entity> boolean shouldRemoveBeforeProcess(
+    ChunkerColumn column,
+    T entity
+)
+```
+
+##### shouldRemoveBeforeWrite()
+
+Determines if an entity should be removed before column writing.
+
+```java
+public <T extends Entity> boolean shouldRemoveBeforeWrite(
+    ChunkerColumn column,
+    T entity
+)
+```
+
+##### updateBeforeProcess()
+
+Updates an entity before column processing.
+
+```java
+public <T extends Entity> T updateBeforeProcess(
+    ChunkerColumn column,
+    T entity
+)
+```
+
+<ParamField path="returns" type="T">
+  The updated entity (may be same instance or new)
+</ParamField>
+
+##### updateBeforeWrite()
+
+Updates an entity before column writing.
+
+```java
+public <T extends Entity> T updateBeforeWrite(
+    ChunkerColumn column,
+    T entity
+)
+```
+
+##### generateBeforeProcessEntities()
+
+Generates entities from blocks before chunk processing.
+
+```java
+public void generateBeforeProcessEntities(
+    ChunkerColumn column,
+    ChunkerChunk chunk
+)
+```
+
+<Note>
+  This method scans the chunk palette for blocks that need to generate entities (e.g., signs, chests).
+</Note>
+
+##### generateBeforeWriteEntities()
+
+Generates entities from blocks before chunk writing.
+
+```java
+public void generateBeforeWriteEntities(
+    ChunkerColumn column,
+    ChunkerChunk chunk
+)
+```
+
+#### Handler Management
+
+##### getInterfaceHandlers()
+
+Retrieves all type handlers that implement a specific interface.
+
+```java
+public <T, U extends T> Collection<U> getInterfaceHandlers(
+    Class<T> interfaceClass,
+    TypeHandler<R, ChunkerEntityType, D, ? extends Entity> lastHandler
+)
+```
+
+<ParamField path="interfaceClass" type="Class<T>">
+  The interface to find handlers for
+</ParamField>
+
+<ParamField path="lastHandler" type="TypeHandler">
+  The main handler for the entity type
+</ParamField>
+
+<ParamField path="returns" type="Collection<U>">
+  Collection of handlers implementing the interface
+</ParamField>
+
+#### Abstract Methods
+
+##### registerTypeHandlers()
+
+Called during initialization to register entity type handlers.
+
+```java
+protected abstract void registerTypeHandlers(Version version)
+```
+
+##### constructDataType()
+
+Constructs the format-specific data container for an entity.
+
+```java
+protected abstract D constructDataType(ChunkerEntityType type)
+```
+
+##### getKey()
+
+Extracts the entity type key from format-specific data.
+
+```java
+public abstract Optional<ChunkerEntityType> getKey(D input)
+```
+
+---
+
+## Bedrock Implementation
+
+### BedrockEntityResolver
+
+Resolver for converting Bedrock entities between Chunker and NBT.
+
+```java
+public BedrockEntityResolver(
+    Version version,
+    BedrockResolvers resolvers
+)
+```
+
+#### Entity Type Key
+
+Bedrock uses the `identifier` field for entity types:
+
+```java
+@Override
+public Optional<ChunkerEntityType> getKey(CompoundTag input) {
+    return input.getOptionalValue("identifier", String.class)
+        .flatMap(resolvers.entityTypeResolver()::to);
+}
+```
+
+#### Registered Handlers
+
+<Tabs>
+  <Tab title="Base Handlers">
+    ```java
+    register(new BedrockEntityHandler());
+    register(new BedrockHangingEntityHandler());
+    ```
+  </Tab>
+  
+  <Tab title="Specific Entities">
+    ```java
+    register(new BedrockPaintingEntityHandler());
+    register(new BedrockItemFrameEntityHandler());
+    ```
+  </Tab>
+</Tabs>
+
+#### Example Usage
+
+```java
+BedrockEntityResolver resolver = new BedrockEntityResolver(version, resolvers);
+
+// Read entity from NBT
+CompoundTag entityNbt = // ... from world data
+Optional<Entity> entity = resolver.to(entityNbt);
+
+// Write entity to NBT
+PaintingEntity painting = new PaintingEntity();
+paint.setPositionX(100);
+paint.setPositionY(64);
+paint.setPositionZ(200);
+Optional<CompoundTag> nbt = resolver.from(painting);
+```
+
+---
+
+## Java Implementation
+
+### JavaEntityResolver
+
+Resolver for converting Java entities between Chunker and NBT.
+
+```java
+public JavaEntityResolver(
+    Version version,
+    JavaResolvers resolvers
+)
+```
+
+#### Entity Type Key
+
+Java uses the `id` field for entity types:
+
+```java
+@Override
+public Optional<ChunkerEntityType> getKey(CompoundTag input) {
+    return input.getOptionalValue("id", String.class)
+        .flatMap(resolvers.entityTypeResolver()::to);
+}
+```
+
+#### Registered Handlers
+
+<Tabs>
+  <Tab title="Base Handlers">
+    ```java
+    register(new JavaEntityHandler());
+    register(new JavaHangingEntityHandler());
+    ```
+  </Tab>
+  
+  <Tab title="Specific Entities">
+    ```java
+    register(new JavaPaintingEntityHandler());
+    register(new JavaItemFrameEntityHandler());
+    register(new EmptyEntityHandler<>(
+        ChunkerVanillaEntityType.GLOW_ITEM_FRAME,
+        GlowItemFrameEntity.class,
+        GlowItemFrameEntity::new
+    ));
+    ```
+  </Tab>
+</Tabs>
+
+#### Example Usage
+
+```java
+JavaEntityResolver resolver = new JavaEntityResolver(version, resolvers);
+
+// Read entity from NBT
+CompoundTag entityNbt = // ... from world data
+Optional<Entity> entity = resolver.to(entityNbt);
+
+// Write entity to NBT
+ItemFrameEntity itemFrame = new ItemFrameEntity();
+itemFrame.setPositionX(100);
+itemFrame.setPositionY(64);
+itemFrame.setPositionZ(200);
+itemFrame.setItem(new ChunkerItemStack(ChunkerVanillaItemType.DIAMOND));
+Optional<CompoundTag> nbt = resolver.from(itemFrame);
+```
+
+---
+
+## Entity Handler Interfaces
+
+Entity handlers can implement special interfaces for additional functionality:
+
+### DoNotProcessEntityHandler
+
+Marks entities that should be removed before processing.
+
+```java
+public interface DoNotProcessEntityHandler<T extends Entity> {
+    boolean shouldRemoveBeforeProcess(ChunkerColumn column, T entity);
+}
+```
+
+### DoNotWriteEntityHandler
+
+Marks entities that should be removed before writing.
+
+```java
+public interface DoNotWriteEntityHandler<T extends Entity> {
+    boolean shouldRemoveBeforeWrite(ChunkerColumn column, T entity);
+}
+```
+
+### UpdateBeforeProcessEntityHandler
+
+Allows entity modification before processing.
+
+```java
+public interface UpdateBeforeProcessEntityHandler<R, T extends Entity> {
+    T updateBeforeProcess(R resolvers, ChunkerColumn column, T entity);
+}
+```
+
+### UpdateBeforeWriteEntityHandler
+
+Allows entity modification before writing.
+
+```java
+public interface UpdateBeforeWriteEntityHandler<R, T extends Entity> {
+    T updateBeforeWrite(R resolvers, ChunkerColumn column, T entity);
+    Class<?> getAdditionalHandledClass();
+}
+```
+
+### GenerateBeforeProcessEntityHandler
+
+Generates entities from blocks before processing.
+
+```java
+public interface GenerateBeforeProcessEntityHandler<T extends Entity> {
+    Collection<ChunkerBlockType> getGenerateBeforeProcessBlockTypes();
+    void generateBeforeProcess(
+        ChunkerColumn column,
+        int x, int y, int z,
+        T entity,
+        ChunkerBlockIdentifier block
+    );
+}
+```
+
+### GenerateBeforeWriteEntityHandler
+
+Generates entities from blocks before writing.
+
+```java
+public interface GenerateBeforeWriteEntityHandler<T extends Entity> {
+    Collection<ChunkerBlockType> getGenerateBeforeWriteBlockTypes();
+    void generateBeforeWrite(
+        ChunkerColumn column,
+        int x, int y, int z,
+        T entity,
+        ChunkerBlockIdentifier block
+    );
+}
+```
+
+---
+
+## Working with Entities
+
+### Reading Entities from World Data
+
+```java
+// Read all entities in a column
+for (Entity entity : column.getEntities()) {
+    // Process entity
+    if (entity instanceof PaintingEntity painting) {
+        ChunkerPaintingMotive motive = painting.getMotive();
+        // ...
+    } else if (entity instanceof ItemFrameEntity itemFrame) {
+        ChunkerItemStack item = itemFrame.getItem();
+        // ...
+    }
+}
+```
+
+### Creating and Adding Entities
+
+```java
+// Create a new painting entity
+PaintingEntity painting = new PaintingEntity();
+painting.setEntityType(ChunkerVanillaEntityType.PAINTING);
+painting.setPositionX(100.5);
+painting.setPositionY(64.0);
+painting.setPositionZ(200.5);
+painting.setMotive(ChunkerPaintingMotive.KEBAB);
+painting.setDirection(Direction.NORTH);
+
+// Add to column
+column.getEntities().add(painting);
+```
+
+### Entity Processing Pipeline
+
+```java
+// Before processing (reading)
+resolver.generateBeforeProcessEntities(column, chunk);
+for (Entity entity : new ArrayList<>(column.getEntities())) {
+    if (resolver.shouldRemoveBeforeProcess(column, entity)) {
+        column.getEntities().remove(entity);
+    } else {
+        Entity updated = resolver.updateBeforeProcess(column, entity);
+        if (updated != entity) {
+            column.getEntities().remove(entity);
+            column.getEntities().add(updated);
+        }
+    }
+}
+
+// Before writing
+resolver.generateBeforeWriteEntities(column, chunk);
+for (Entity entity : new ArrayList<>(column.getEntities())) {
+    if (resolver.shouldRemoveBeforeWrite(column, entity)) {
+        column.getEntities().remove(entity);
+    } else {
+        Entity updated = resolver.updateBeforeWrite(column, entity);
+        if (updated != entity) {
+            column.getEntities().remove(entity);
+            column.getEntities().add(updated);
+        }
+    }
+}
+```
+
+### Unknown Entity Preservation
+
+When `preserveUnknownEntities` is enabled, entities that don't have handlers are preserved:
+
+```java
+// Unknown entities are wrapped in UnknownEntity
+if (entity instanceof UnknownEntity unknownEntity) {
+    ChunkerEntityType originalType = unknownEntity.getEntityType();
+    // Entity data is preserved for round-trip conversion
+}
+```
+
+---
+
+## Common Entity Types
+
+### Supported Entities
+
+Currently, the resolvers support the following entity types:
+
+<ParamField path="ChunkerVanillaEntityType.PAINTING" type="PaintingEntity">
+  Paintings on walls with various motives
+</ParamField>
+
+<ParamField path="ChunkerVanillaEntityType.ITEM_FRAME" type="ItemFrameEntity">
+  Item frames holding items
+</ParamField>
+
+<ParamField path="ChunkerVanillaEntityType.GLOW_ITEM_FRAME" type="GlowItemFrameEntity">
+  Glowing item frames (Java only)
+</ParamField>
+
+### Entity Properties
+
+#### Base Entity Properties
+
+All entities have these properties from `Entity` class:
+
+```java
+// Position
+double positionX = entity.getPositionX();
+double positionY = entity.getPositionY();
+double positionZ = entity.getPositionZ();
+
+// Entity type
+ChunkerEntityType type = entity.getEntityType();
+```
+
+#### Hanging Entity Properties
+
+Entities that hang on walls (paintings, item frames):
+
+```java
+// Direction the entity faces
+Direction direction = hangingEntity.getDirection();
+hangingEntity.setDirection(Direction.NORTH);
+```
+
+#### Item Frame Properties
+
+```java
+ItemFrameEntity itemFrame = (ItemFrameEntity) entity;
+
+// Item in the frame
+ChunkerItemStack item = itemFrame.getItem();
+itemFrame.setItem(new ChunkerItemStack(ChunkerVanillaItemType.DIAMOND));
+
+// Item rotation (0-7)
+int rotation = itemFrame.getItemRotation();
+itemFrame.setItemRotation(4);
+```
+
+#### Painting Properties
+
+```java
+PaintingEntity painting = (PaintingEntity) entity;
+
+// Painting motive
+ChunkerPaintingMotive motive = painting.getMotive();
+painting.setMotive(ChunkerPaintingMotive.KEBAB);
+```
+
+<Note>
+  Entity support is currently limited to hanging entities (paintings and item frames). Support for more entity types can be added by implementing additional entity handlers.
+</Note>

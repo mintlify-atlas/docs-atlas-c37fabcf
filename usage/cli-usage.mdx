@@ -1,0 +1,385 @@
+---
+title: CLI Usage
+description: Complete command-line reference for Chunker
+---
+
+## Overview
+
+Chunker can be run as a command-line application for automated world conversions. The CLI is ideal for batch processing, server automation, or integration into build pipelines.
+
+## Requirements
+
+- Java 17 or higher
+- Chunker CLI jar file (download from [releases](https://github.com/HiveGamesOSS/Chunker/releases))
+
+## Basic Usage
+
+The CLI requires three mandatory parameters to convert a world:
+
+```bash
+java -jar chunker-cli-VERSION.jar -i "my_world" -f BEDROCK_1_20_80 -o output
+```
+
+### Command Output
+
+When running a conversion, you'll see output like:
+
+```bash
+Converting from Java Edition 1.20.5 to Bedrock Edition 1.20.80
+0.00%
+25.50%
+50.75%
+75.00%
+100.00%
+Conversion complete! Took 0h 2m 15s 340ms
+```
+
+## Required Parameters
+
+<ParamField path="-i" type="string" required>
+  **Input Directory** (`--inputDirectory`)
+  
+  The path to the input world directory. Can be relative to the application or an absolute path.
+  
+  ```bash
+  -i "path/to/my_world"
+  --inputDirectory "C:/Users/username/AppData/Roaming/.minecraft/saves/MyWorld"
+  ```
+</ParamField>
+
+<ParamField path="-o" type="string" required>
+  **Output Directory** (`--outputDirectory`)
+  
+  The path where the converted world will be saved. The directory will be created if it doesn't exist.
+  
+  ```bash
+  -o "converted_world"
+  --outputDirectory "output/bedrock_world"
+  ```
+</ParamField>
+
+<ParamField path="-f" type="string" required>
+  **Output Format** (`--outputFormat`)
+  
+  The target Minecraft version to convert to, in the format `EDITION_X_Y_Z`.
+  
+  Examples:
+  - `JAVA_1_20_5` - Java Edition 1.20.5
+  - `BEDROCK_1_19_30` - Bedrock Edition 1.19.30
+  - `JAVA_1_20` - Java Edition 1.20.x (latest patch)
+  - `BEDROCK_1_21` - Bedrock Edition 1.21.x (latest patch)
+  
+  ```bash
+  -f JAVA_1_20_5
+  --outputFormat BEDROCK_1_21_0
+  ```
+</ParamField>
+
+## Optional Parameters
+
+<ParamField path="-m" type="string">
+  **Block Mappings** (`--blockMappings`)
+  
+  Custom block mappings as either a JSON file path or inline JSON object. This allows you to override how specific blocks are converted.
+  
+  ```bash
+  # From file
+  -m "block_mappings.json"
+  
+  # Inline JSON
+  -m '{"mappings": [...]}'
+  ```
+</ParamField>
+
+<ParamField path="-s" type="string">
+  **World Settings** (`--worldSettings`)
+  
+  World settings as a JSON file path or inline JSON object. Configure world properties like spawn point, game mode, difficulty, etc.
+  
+  ```bash
+  -s "world_settings.json"
+  -s '{"GameType": 1, "Difficulty": 2}'
+  ```
+</ParamField>
+
+<ParamField path="-p" type="string">
+  **Pruning Settings** (`--pruning`)
+  
+  Pruning configuration as a JSON file path or inline JSON object. Define which chunks to exclude from conversion.
+  
+  ```bash
+  -p "pruning.json"
+  ```
+</ParamField>
+
+<ParamField path="-c" type="string">
+  **Converter Settings** (`--converterSettings`)
+  
+  Converter settings as a JSON file path or inline JSON object. Control conversion behavior like item conversion, map conversion, and more.
+  
+  ```bash
+  -c "converter_settings.json"
+  ```
+</ParamField>
+
+<ParamField path="-d" type="string">
+  **Dimension Mappings** (`--dimensionMappings`)
+  
+  Dimension mappings as a JSON file path or inline JSON object. Map input dimensions to output dimensions (e.g., Overworld, Nether, End).
+  
+  ```bash
+  -d "dimension_mappings.json"
+  ```
+</ParamField>
+
+<ParamField path="-k" type="boolean">
+  **Keep Original NBT** (`--keepOriginalNBT`)
+  
+  Preserves original NBT data from input to output where possible. Only supported when the output format matches the input edition (e.g., Java to Java).
+  
+  <Warning>
+    This option requires copying the input world to the output folder before conversion. Incompatible NBT data may cause issues.
+  </Warning>
+  
+  ```bash
+  -k
+  --keepOriginalNBT
+  ```
+</ParamField>
+
+<ParamField path="--help" type="boolean">
+  Display help information and available options.
+  
+  ```bash
+  java -jar chunker-cli-VERSION.jar --help
+  ```
+</ParamField>
+
+<ParamField path="--version" type="boolean">
+  Display the Chunker version.
+  
+  ```bash
+  java -jar chunker-cli-VERSION.jar --version
+  ```
+</ParamField>
+
+## Advanced Usage
+
+### Listing Available Formats
+
+To see all supported output formats, provide an invalid format:
+
+```bash
+java -jar chunker-cli-VERSION.jar -f ?
+```
+
+This will display a list of all available format identifiers.
+
+### Using Preloaded Settings
+
+Chunker can automatically load settings from the input world directory. Place any of these files in the same directory as `level.dat`:
+
+- `block_mappings.chunker.json`
+- `converter_settings.chunker.json`
+- `dimension_mappings.chunker.json`
+- `pruning.chunker.json`
+- `world_settings.chunker.json`
+
+These files are automatically loaded if no corresponding parameter is provided. You can generate these files using the Chunker web GUI at [https://chunker.app](https://chunker.app) through the Advanced Settings → Converter Settings tab.
+
+```bash
+# Settings will be loaded from my_world/*.chunker.json files
+java -jar chunker-cli-VERSION.jar -i "my_world" -f BEDROCK_1_20_80 -o output
+```
+
+### Complete Example with All Options
+
+```bash
+java -jar chunker-cli-VERSION.jar \
+  --inputDirectory "worlds/java_world" \
+  --outputFormat BEDROCK_1_21_0 \
+  --outputDirectory "worlds/bedrock_world" \
+  --blockMappings "custom_mappings.json" \
+  --worldSettings "settings.json" \
+  --pruning "pruning.json" \
+  --converterSettings "converter.json" \
+  --dimensionMappings "dimensions.json" \
+  --keepOriginalNBT
+```
+
+## Memory Configuration
+
+For large worlds, you may need to allocate more memory to the Java process:
+
+```bash
+# Allocate 8GB of memory
+java -Xmx8G -jar chunker-cli-VERSION.jar -i "my_world" -f BEDROCK_1_20_80 -o output
+
+# Set minimum and maximum memory
+java -Xms4G -Xmx8G -jar chunker-cli-VERSION.jar -i "my_world" -f BEDROCK_1_20_80 -o output
+```
+
+## Exit Codes
+
+<Accordion title="Exit Code Reference">
+  - `0` - Conversion completed successfully
+  - `1` - Conversion failed with an exception
+  - `12` - Out of memory error
+</Accordion>
+
+## Examples
+
+<Tabs>
+  <Tab title="Java to Bedrock">
+    Convert a Java Edition world to Bedrock Edition:
+    
+    ```bash
+    java -jar chunker-cli-1.0.0.jar \
+      -i "saves/JavaWorld" \
+      -f BEDROCK_1_21_0 \
+      -o "converted/BedrockWorld"
+    ```
+  </Tab>
+  
+  <Tab title="Bedrock to Java">
+    Convert a Bedrock Edition world to Java Edition:
+    
+    ```bash
+    java -jar chunker-cli-1.0.0.jar \
+      -i "bedrock_worlds/MyWorld" \
+      -f JAVA_1_20_6 \
+      -o "java_worlds/MyWorld"
+    ```
+  </Tab>
+  
+  <Tab title="Version Upgrade">
+    Upgrade a Java Edition world to a newer version:
+    
+    ```bash
+    java -jar chunker-cli-1.0.0.jar \
+      -i "old_world" \
+      -f JAVA_1_21_0 \
+      -o "upgraded_world"
+    ```
+  </Tab>
+  
+  <Tab title="With Custom Settings">
+    Convert with custom block mappings and settings:
+    
+    ```bash
+    java -Xmx8G -jar chunker-cli-1.0.0.jar \
+      -i "input/world" \
+      -f BEDROCK_1_20_80 \
+      -o "output/world" \
+      -m "custom_blocks.json" \
+      -c "converter_settings.json"
+    ```
+  </Tab>
+</Tabs>
+
+## Compaction Signal
+
+When converting to Bedrock Edition with compaction enabled, you'll see additional output:
+
+```bash
+Converting from Java Edition 1.20.5 to Bedrock Edition 1.20.80
+100.00%
+Compacting world, this may take a while...
+Finished compacting world.
+Conversion complete! Took 0h 5m 32s 120ms
+```
+
+Compaction optimizes the Bedrock LevelDB database but can take additional time.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Failed to find suitable reader for the world">
+    This error occurs when Chunker cannot detect the world format. Ensure:
+    - The input directory contains a valid `level.dat` file
+    - The world is from a supported Minecraft version
+    - The world files are not corrupted
+  </Accordion>
+  
+  <Accordion title="Failed to find suitable writer for the world">
+    This occurs when the output format is invalid. Check:
+    - The format string follows the `EDITION_X_Y_Z` pattern
+    - The version is supported (see [Supported Versions](/usage/supported-versions))
+    - You're using the correct edition name (JAVA or BEDROCK)
+  </Accordion>
+  
+  <Accordion title="Out of memory error (exit code 12)">
+    The conversion ran out of memory. Try:
+    - Increasing the heap size with `-Xmx` (e.g., `-Xmx16G`)
+    - Using pruning to reduce the world size
+    - Converting on a machine with more RAM
+    - Closing other applications to free up memory
+  </Accordion>
+  
+  <Accordion title="Original NBT not available error">
+    The `--keepOriginalNBT` flag is only supported when converting within the same edition (Java to Java or Bedrock to Bedrock). Remove the flag for cross-edition conversions.
+  </Accordion>
+</AccordionGroup>
+
+## Integration with Scripts
+
+### Bash Script Example
+
+```bash
+#!/bin/bash
+set -e
+
+INPUT_DIR="$1"
+OUTPUT_FORMAT="$2"
+OUTPUT_DIR="$3"
+
+if [ -z "$INPUT_DIR" ] || [ -z "$OUTPUT_FORMAT" ] || [ -z "$OUTPUT_DIR" ]; then
+    echo "Usage: $0 <input_dir> <output_format> <output_dir>"
+    exit 1
+fi
+
+echo "Converting world: $INPUT_DIR"
+java -Xmx8G -jar chunker-cli.jar \
+    -i "$INPUT_DIR" \
+    -f "$OUTPUT_FORMAT" \
+    -o "$OUTPUT_DIR"
+
+if [ $? -eq 0 ]; then
+    echo "Conversion successful!"
+else
+    echo "Conversion failed with exit code $?"
+    exit 1
+fi
+```
+
+### Windows Batch Script Example
+
+```batch
+@echo off
+setlocal
+
+set INPUT_DIR=%1
+set OUTPUT_FORMAT=%2
+set OUTPUT_DIR=%3
+
+if "%INPUT_DIR%"=="" (
+    echo Usage: %0 ^<input_dir^> ^<output_format^> ^<output_dir^>
+    exit /b 1
+)
+
+echo Converting world: %INPUT_DIR%
+java -Xmx8G -jar chunker-cli.jar -i "%INPUT_DIR%" -f %OUTPUT_FORMAT% -o "%OUTPUT_DIR%"
+
+if %ERRORLEVEL% EQU 0 (
+    echo Conversion successful!
+) else (
+    echo Conversion failed with exit code %ERRORLEVEL%
+    exit /b %ERRORLEVEL%
+)
+```
+
+## See Also
+
+- [Desktop App Usage](/usage/app-usage) - GUI-based world conversion
+- [Supported Versions](/usage/supported-versions) - Complete list of supported Minecraft versions
+- [GitHub Releases](https://github.com/HiveGamesOSS/Chunker/releases) - Download the latest version

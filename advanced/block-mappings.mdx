@@ -1,0 +1,482 @@
+---
+title: Custom Block Mappings
+description: Create custom block and item identifier mappings to control how blocks convert between editions
+---
+
+## Overview
+
+Block mappings allow you to customize how blocks and items are converted between Java and Bedrock editions. This is useful for:
+
+- Changing specific block types during conversion
+- Handling custom/modded blocks
+- Fixing unwanted conversion behaviors
+- Creating custom block transformations
+
+## File Structure
+
+Block mappings are defined in `block_mappings.chunker.json` (MappingsFile.java:1-575):
+
+```json
+{
+  "identifiers": [],
+  "items": [],
+  "state_lists": {},
+  "types": {}
+}
+```
+
+## Core Components
+
+The mapping system has three main components (MappingsFile.java:20-54):
+
+### 1. Identifiers
+
+Map block identifiers from one type to another:
+
+```json
+{
+  "identifiers": [
+    {
+      "old_identifier": "minecraft:wool",
+      "new_identifier": "minecraft:stone"
+    }
+  ]
+}
+```
+
+### 2. State Lists
+
+Groups of states that are commonly used together:
+
+```json
+{
+  "state_lists": {
+    "wool": [
+      {
+        "old_state": "color",
+        "new_state": "color",
+        "type": "color_changer"
+      }
+    ]
+  }
+}
+```
+
+### 3. Types
+
+Mapping of input values to output values:
+
+```json
+{
+  "types": {
+    "color_changer": [
+      {
+        "input": "orange",
+        "output": "red"
+      }
+    ]
+  }
+}
+```
+
+## Complete Example
+
+Here's a complete example that changes orange wool to red wool (MappingsFile.java:26-54):
+
+```json block_mappings.chunker.json
+{
+  "identifiers": [
+    {
+      "old_identifier": "minecraft:wool",
+      "new_identifier": "minecraft:wool",
+      "state_list": "wool"
+    }
+  ],
+  "state_lists": {
+    "wool": [
+      {
+        "old_state": "color",
+        "new_state": "color",
+        "type": "color_changer"
+      }
+    ]
+  },
+  "types": {
+    "color_changer": [
+      {
+        "input": "orange",
+        "output": "red"
+      }
+    ]
+  }
+}
+```
+
+## Identifier Mapping
+
+### Basic Identifier Mapping
+
+Simple identifier conversion:
+
+```json
+{
+  "old_identifier": "minecraft:wool",
+  "new_identifier": "minecraft:stone"
+}
+```
+
+### With State Values
+
+Map specific block states:
+
+```json
+{
+  "old_identifier": "minecraft:wool",
+  "new_identifier": "minecraft:stone",
+  "old_state_values": {
+    "color": "orange"
+  },
+  "new_state_values": {
+    "stone_type": "granite"
+  }
+}
+```
+
+### Using State Lists
+
+Reference a state list for complex mappings:
+
+```json
+{
+  "old_identifier": "minecraft:wool",
+  "new_identifier": "minecraft:wool",
+  "state_list": "wool"
+}
+```
+
+### Wildcard State List
+
+Pass through all states unchanged (MappingsFile.java:260):
+
+```json
+{
+  "old_identifier": "minecraft:wool",
+  "new_identifier": "minecraft:wool",
+  "state_list": "*"
+}
+```
+
+<Note>
+Using `"state_list": "*"` preserves all block states. Omitting `state_list` removes all states.
+</Note>
+
+## Custom Block Handler
+
+Handle modded or custom blocks with the special identifier (MappingsFile.java:57, 209-218):
+
+```json
+{
+  "identifiers": [
+    {
+      "old_identifier": "$custom_block",
+      "new_identifier": "$custom_block",
+      "state_list": "custom_handler"
+    }
+  ],
+  "state_lists": {
+    "custom_handler": [
+      {
+        "old_state": "facing",
+        "new_state": "facing"
+      }
+    ]
+  }
+}
+```
+
+<Warning>
+The `$custom_block` identifier matches any non-vanilla block (blocks not in the `minecraft:` namespace).
+</Warning>
+
+## State Value Types
+
+State values can be strings, integers, or booleans:
+
+<CodeGroup>
+```json String
+{
+  "old_state_values": {
+    "color": "orange"
+  },
+  "new_state_values": {
+    "color": "red"
+  }
+}
+```
+
+```json Integer
+{
+  "old_state_values": {
+    "level": 1
+  },
+  "new_state_values": {
+    "level": 2
+  }
+}
+```
+
+```json Boolean
+{
+  "old_state_values": {
+    "powered": true
+  },
+  "new_state_values": {
+    "powered": false
+  }
+}
+```
+</CodeGroup>
+
+## Special State Prefixes
+
+Chunker uses special state prefixes for metadata (MappingsFile.java:115-119):
+
+- `meta:` - Additional metadata attached to a state
+- `virtual:` - State data inferred by Chunker that doesn't have parity between editions
+
+<Note>
+Special states are automatically preserved through conversions (MappingsFile.java:267-270).
+</Note>
+
+## Item Mappings
+
+Map items separately from blocks:
+
+```json
+{
+  "items": [
+    {
+      "old_identifier": "minecraft:golden_apple",
+      "new_identifier": "minecraft:enchanted_golden_apple"
+    }
+  ]
+}
+```
+
+<Note>
+If an item mapping isn't found, Chunker falls back to block mappings (MappingsFile.java:174-184).
+</Note>
+
+## Multi-State Mappings
+
+Map multiple states at once:
+
+```json
+{
+  "state_lists": {
+    "stairs": [
+      {
+        "old_state": ["facing", "half"],
+        "new_state": ["facing", "half"]
+      }
+    ]
+  }
+}
+```
+
+## Type Mappings
+
+### Simple Type Mapping
+
+```json
+{
+  "types": {
+    "direction": [
+      {
+        "input": "north",
+        "output": "south"
+      },
+      {
+        "input": "south",
+        "output": "north"
+      }
+    ]
+  }
+}
+```
+
+### Multi-Value Type Mapping
+
+Map one input to multiple outputs:
+
+```json
+{
+  "types": {
+    "complex_mapping": [
+      {
+        "input": "orange",
+        "output": ["red", true]
+      }
+    ]
+  }
+}
+```
+
+## Usage Examples
+
+### Replace All Stone with Dirt
+
+```json
+{
+  "identifiers": [
+    {
+      "old_identifier": "minecraft:stone",
+      "new_identifier": "minecraft:dirt"
+    }
+  ]
+}
+```
+
+### Change Wool Colors
+
+```json
+{
+  "identifiers": [
+    {
+      "old_identifier": "minecraft:wool",
+      "new_identifier": "minecraft:wool",
+      "state_list": "wool_colors"
+    }
+  ],
+  "state_lists": {
+    "wool_colors": [
+      {
+        "old_state": "color",
+        "new_state": "color",
+        "type": "color_swap"
+      }
+    ]
+  },
+  "types": {
+    "color_swap": [
+      {
+        "input": "white",
+        "output": "black"
+      },
+      {
+        "input": "black",
+        "output": "white"
+      }
+    ]
+  }
+}
+```
+
+### Preserve Custom Block States
+
+```json
+{
+  "identifiers": [
+    {
+      "old_identifier": "$custom_block",
+      "state_list": "*"
+    }
+  ]
+}
+```
+
+## Loading Block Mappings
+
+<CodeGroup>
+```bash World Folder
+# Place in world directory
+my_world/block_mappings.chunker.json
+
+# Run conversion
+java -jar chunker-cli.jar -i my_world -f BEDROCK_1_20_80 -o output
+```
+
+```bash CLI Flag
+java -jar chunker-cli.jar \
+  -i my_world \
+  -f BEDROCK_1_20_80 \
+  -o output \
+  -m block_mappings.json
+```
+
+```bash Inline JSON
+java -jar chunker-cli.jar \
+  -i my_world \
+  -f BEDROCK_1_20_80 \
+  -o output \
+  -m '{"identifiers": [{"old_identifier": "minecraft:wool", "new_identifier": "minecraft:stone"}]}'
+```
+</CodeGroup>
+
+## Validation
+
+Chunker validates mappings during conversion (CLI.java:154-161):
+
+- State lists must exist if referenced
+- Type mappings must exist if referenced
+- JSON must be valid and properly formatted
+
+<Warning>
+Invalid mappings will cause the conversion to fail with a descriptive error message.
+</Warning>
+
+## Advanced Features
+
+### Inverse Mappings
+
+Mappings can be inverted programmatically (MappingsFile.java:277-305):
+
+```java
+MappingsFile inverse = mappingsFile.inverse();
+```
+
+This creates a reverse mapping where A → B becomes B → A.
+
+### Redundant Mappings
+
+If multiple mappings match, the first one is used. Additional matches are stored as redundant mappings.
+
+## Best Practices
+
+1. **Test mappings** on a small world first
+2. **Use state lists** to organize complex mappings
+3. **Document your mappings** with comments in a separate README
+4. **Export from web UI** when possible for validated configurations
+5. **Backup worlds** before applying custom mappings
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Mapping not applying">
+    - Check that old_identifier exactly matches the block in your world
+    - Verify state_list exists if referenced
+    - Ensure type mappings are defined
+  </Accordion>
+  
+  <Accordion title="Conversion fails with parse error">
+    - Validate JSON syntax
+    - Check for missing commas or brackets
+    - Remove trailing commas (not allowed in JSON)
+  </Accordion>
+  
+  <Accordion title="Custom blocks not converting">
+    - Use `$custom_block` handler for non-minecraft namespace blocks
+    - Verify the block identifier format
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Configuration Overview" icon="gear" href="/advanced/configuration">
+    Learn about all configuration options
+  </Card>
+  <Card title="Converter Settings" icon="sliders" href="/advanced/converter-settings">
+    Configure conversion behavior
+  </Card>
+</CardGroup>

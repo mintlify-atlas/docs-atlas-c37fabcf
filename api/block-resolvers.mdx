@@ -1,0 +1,376 @@
+---
+title: Block Identifier Resolvers
+description: API reference for block identifier resolvers that convert between format-specific block identifiers and Chunker's intermediate representation
+---
+
+## Overview
+
+Block identifier resolvers handle the conversion of block identifiers between Minecraft's Java and Bedrock editions and Chunker's intermediate format. These resolvers manage block states, properties, and format-specific differences like waterlogging.
+
+## Base Resolver
+
+### ChunkerBlockIdentifierResolver
+
+Abstract base class for converting format-specific identifiers into `ChunkerBlockIdentifier`.
+
+<ParamField path="ChunkerBlockIdentifierResolver" type="abstract class">
+  Located at: `com.hivemc.chunker.conversion.encoding.base.resolver.identifier.ChunkerBlockIdentifierResolver`
+</ParamField>
+
+#### Constructor
+
+```java
+public ChunkerBlockIdentifierResolver(
+    Converter converter,
+    Version version,
+    boolean reader,
+    boolean customIdentifiersAllowed
+)
+```
+
+<ParamField path="converter" type="Converter">
+  The converter instance
+</ParamField>
+
+<ParamField path="version" type="Version">
+  The version this resolver handles
+</ParamField>
+
+<ParamField path="reader" type="boolean">
+  Whether this is the reader (true) or writer (false)
+</ParamField>
+
+<ParamField path="customIdentifiersAllowed" type="boolean">
+  Whether custom identifiers are processed as custom
+</ParamField>
+
+#### Core Methods
+
+##### to()
+
+Converts a format-specific identifier to a Chunker block identifier.
+
+```java
+public Optional<ChunkerBlockIdentifier> to(Identifier input)
+```
+
+<ParamField path="input" type="Identifier">
+  The input identifier from the format (e.g., `minecraft:stone`)
+</ParamField>
+
+<ParamField path="returns" type="Optional<ChunkerBlockIdentifier>">
+  The converted Chunker block identifier, or empty if not supported
+</ParamField>
+
+##### from()
+
+Converts a Chunker block identifier to a format-specific identifier.
+
+```java
+public Optional<Identifier> from(ChunkerBlockIdentifier input)
+```
+
+<ParamField path="input" type="ChunkerBlockIdentifier">
+  The Chunker block identifier
+</ParamField>
+
+<ParamField path="returns" type="Optional<Identifier>">
+  The format-specific identifier, or empty if not supported
+</ParamField>
+
+##### isSupported()
+
+Checks if an identifier can be resolved.
+
+```java
+public boolean isSupported(String identifier)
+public boolean isSupported(ChunkerBlockType chunkerBlockType)
+```
+
+<ParamField path="identifier" type="String">
+  The input identifier in the format `namespace:key`
+</ParamField>
+
+<ParamField path="chunkerBlockType" type="ChunkerBlockType">
+  The block type object (usually ChunkerVanillaBlockType enum entry)
+</ParamField>
+
+<ParamField path="returns" type="boolean">
+  True if the block can potentially be resolved
+</ParamField>
+
+#### Registration Methods
+
+These methods are used during resolver initialization to register block mappings:
+
+##### register()
+
+Registers a standard block mapping.
+
+```java
+protected void register(BlockMapping mapping)
+protected void register(BlockMapping[] mappings)
+```
+
+##### registerDuplicateInput()
+
+Registers a mapping where the input is duplicated (multiple Chunker types map to the same input).
+
+```java
+protected void registerDuplicateInput(BlockMapping mapping)
+protected void registerDuplicateInput(BlockMapping[] mappings)
+```
+
+##### registerDuplicateOutput()
+
+Registers a mapping where the output is duplicated (one Chunker type maps to multiple inputs).
+
+```java
+protected void registerDuplicateOutput(BlockMapping mapping)
+protected void registerDuplicateOutput(BlockMapping[] mappings)
+```
+
+##### registerOverrideInput()
+
+Overrides an existing Input → Chunker mapping.
+
+```java
+protected void registerOverrideInput(BlockMapping mapping)
+protected void registerOverrideInput(BlockMapping[] mappings)
+```
+
+##### registerOverrideOutput()
+
+Overrides an existing Chunker → Output mapping.
+
+```java
+protected void registerOverrideOutput(BlockMapping mapping)
+protected void registerOverrideOutput(BlockMapping[] mappings)
+```
+
+##### removeOutputMapping()
+
+Removes all mappings from Chunker → input of a specific type.
+
+```java
+protected void removeOutputMapping(ChunkerBlockType chunkerBlockType)
+```
+
+#### Abstract Methods
+
+##### registerMappings()
+
+Called on construction to register all block mappings. Must be implemented by subclasses.
+
+```java
+public abstract void registerMappings(Version version)
+```
+
+---
+
+## Bedrock Implementation
+
+### BedrockBlockIdentifierResolver
+
+Resolver for converting between Bedrock block identifiers and ChunkerBlockIdentifier.
+
+<Note>
+  Waterlogging is automatically handled by this resolver and states don't need to be manually registered.
+</Note>
+
+```java
+public BedrockBlockIdentifierResolver(
+    Converter converter,
+    Version version,
+    boolean reader,
+    boolean customIdentifiersAllowed
+)
+```
+
+#### Waterlogging Support
+
+```java
+public static final StateMappingGroup WATERLOGGED = new StateMappingGroup.Builder()
+    .state("waterlogged", VanillaBlockStates.WATERLOGGED, BedrockStateTypes.BOOL_DEFAULT_FALSE)
+    .build();
+```
+
+On Bedrock, waterlogging is allowed on every block, so an extra state handler is used to infer this automatically.
+
+#### Example Mappings
+
+<Tabs>
+  <Tab title="Simple Mapping">
+    ```java
+    register(BlockMapping.of("minecraft:stone", ChunkerVanillaBlockType.STONE));
+    ```
+  </Tab>
+  
+  <Tab title="With States">
+    ```java
+    register(BlockMapping.of(
+        "minecraft:barrel",
+        ChunkerVanillaBlockType.BARREL,
+        BedrockStateGroups.BARREL
+    ));
+    ```
+  </Tab>
+  
+  <Tab title="Flattening">
+    ```java
+    register(BlockMapping.flatten(
+        "minecraft:dirt",
+        "dirt_type",
+        ImmutableMultimap.<String, ChunkerVanillaBlockType>builder()
+            .put("coarse", ChunkerVanillaBlockType.COARSE_DIRT)
+            .put("normal", ChunkerVanillaBlockType.DIRT)
+            .build()
+    ));
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Java Implementation
+
+### JavaBlockIdentifierResolver
+
+Resolver for converting between Java block identifiers and ChunkerBlockIdentifier.
+
+```java
+public JavaBlockIdentifierResolver(
+    Converter converter,
+    Version version,
+    boolean reader,
+    boolean customIdentifiersAllowed
+)
+```
+
+#### Waterlogging Support
+
+```java
+public static final StateMappingGroup DEFAULT_WATERLOGGED_FALSE = 
+    new StateMappingGroup.Builder()
+        .defaultOutput(VanillaBlockStates.WATERLOGGED, Bool.FALSE)
+        .build();
+```
+
+On Java, waterlogging is block-specific, so the resolver assumes waterlogging isn't present when the state isn't explicitly defined.
+
+#### Example Mappings
+
+<Tabs>
+  <Tab title="Simple Mapping">
+    ```java
+    register(BlockMapping.of("minecraft:stone", ChunkerVanillaBlockType.STONE));
+    ```
+  </Tab>
+  
+  <Tab title="With States">
+    ```java
+    register(BlockMapping.of(
+        "minecraft:brewing_stand",
+        ChunkerVanillaBlockType.BREWING_STAND,
+        JavaStateGroups.BREWING_STAND
+    ));
+    ```
+  </Tab>
+  
+  <Tab title="Group Mapping">
+    ```java
+    register(BlockMapping.group(
+        ImmutableMultimap.<String, ChunkerVanillaBlockType>builder()
+            .put("minecraft:dispenser", ChunkerVanillaBlockType.DISPENSER)
+            .put("minecraft:dropper", ChunkerVanillaBlockType.DROPPER)
+            .build(),
+        JavaStateGroups.FACING_TRIGGERED
+    ));
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Usage Examples
+
+### Converting a Block Identifier
+
+```java
+// Create resolver
+BedrockBlockIdentifierResolver resolver = new BedrockBlockIdentifierResolver(
+    converter,
+    version,
+    true, // reader mode
+    true  // allow custom identifiers
+);
+
+// Convert from Bedrock to Chunker
+Identifier bedrockBlock = new Identifier(
+    "minecraft:stone",
+    Collections.emptyMap()
+);
+Optional<ChunkerBlockIdentifier> chunkerBlock = resolver.to(bedrockBlock);
+
+// Convert from Chunker back to Bedrock
+ChunkerBlockIdentifier block = new ChunkerBlockIdentifier(
+    ChunkerVanillaBlockType.STONE,
+    Collections.emptyMap()
+);
+Optional<Identifier> outputBlock = resolver.from(block);
+```
+
+### Checking Support
+
+```java
+// Check if a block identifier is supported
+if (resolver.isSupported("minecraft:diamond_ore")) {
+    // Block can be converted
+}
+
+// Check if a Chunker block type is supported
+if (resolver.isSupported(ChunkerVanillaBlockType.DIAMOND_ORE)) {
+    // Block type can be converted
+}
+```
+
+### Custom Block Handling
+
+```java
+// When customIdentifiersAllowed is true, unknown blocks are preserved
+Identifier customBlock = new Identifier(
+    "mymod:custom_block",
+    Map.of("color", new StateValueString("red"))
+);
+
+Optional<ChunkerBlockIdentifier> result = resolver.to(customBlock);
+// Returns a ChunkerBlockIdentifier with custom block type
+```
+
+---
+
+## Block State Mapping
+
+Block states are mapped using `StateMappingGroup` objects that define how states convert between formats.
+
+### State Mapping Example
+
+```java
+StateMappingGroup FACING_HORIZONTAL = new StateMappingGroup.Builder()
+    .state("facing", VanillaBlockStates.FACING_HORIZONTAL, 
+           new EnumStateGroup<>(Direction.Horizontal.class))
+    .build();
+```
+
+### Common State Groups
+
+- `WATERLOGGED` - Waterlogging state handling
+- `FACING_HORIZONTAL` - Horizontal facing direction
+- `FACING_DIRECTION` - All-direction facing
+- `LIT` - Lit/unlit state
+- `POWERED` - Powered/unpowered state
+- `AGE` - Age/growth state
+
+<Note>
+  State groups handle the conversion of block properties between different naming conventions and value representations across Java and Bedrock editions.
+</Note>

@@ -1,0 +1,193 @@
+---
+title: Installation
+description: Install Chunker desktop app or CLI on your system
+---
+
+# Installation
+
+Chunker is available in two formats: a desktop application with a graphical interface and a command-line interface (CLI) for advanced users and automation.
+
+## System Requirements
+
+<Tabs>
+  <Tab title="Desktop App">
+    - **Operating System**: Windows, macOS, or Linux
+    - **Memory**: Minimum 4GB RAM (8GB recommended for large worlds)
+    - **Java**: Bundled with the application (no separate installation required)
+    - **Disk Space**: Sufficient space for input and output worlds (worlds can be several GB)
+  </Tab>
+  <Tab title="CLI">
+    - **Java**: Version 17 or higher (required)
+    - **Memory**: Minimum 4GB RAM (8GB recommended for large worlds)
+    - **Operating System**: Any platform supporting Java 17+
+    - **Disk Space**: Sufficient space for input and output worlds
+  </Tab>
+</Tabs>
+
+<Note>
+Chunker defaults to using 75% of available memory. For large worlds, ensure you have adequate RAM available.
+</Note>
+
+## Installing the Desktop App
+
+The desktop application provides an Electron-based frontend for easy world conversion.
+
+<Steps>
+  <Step title="Download Chunker">
+    Visit the [GitHub releases page](https://github.com/HiveGamesOSS/Chunker/releases) and download the appropriate version for your operating system:
+    
+    - **Windows**: `Chunker-{version}.exe`
+    - **macOS**: `Chunker-{version}.dmg`
+    - **Linux**: `Chunker-{version}.AppImage` or `.deb` package
+  </Step>
+  
+  <Step title="Install the Application">
+    <Tabs>
+      <Tab title="Windows">
+        Run the `.exe` installer and follow the installation wizard.
+      </Tab>
+      <Tab title="macOS">
+        Open the `.dmg` file and drag Chunker to your Applications folder.
+      </Tab>
+      <Tab title="Linux">
+        For AppImage:
+        ```bash
+        chmod +x Chunker-*.AppImage
+        ./Chunker-*.AppImage
+        ```
+        
+        For Debian/Ubuntu:
+        ```bash
+        sudo dpkg -i Chunker-*.deb
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+  
+  <Step title="Launch Chunker">
+    Open Chunker from your applications menu or desktop shortcut.
+  </Step>
+</Steps>
+
+### Customizing Memory Allocation (Desktop App)
+
+By default, Chunker uses 75% of available system memory. You can customize this when launching:
+
+```bash
+# Allocate 8GB maximum memory
+Chunker.exe -Xmx8G
+
+# Set both minimum and maximum memory
+Chunker.exe -Xms4G -Xmx8G
+```
+
+<Note>
+Chunker forwards `-Xmx` (maximum memory) and `-Xms` (minimum memory) flags to the Java Virtual Machine. For other JVM options, use `--java-options="..."`.
+</Note>
+
+## Installing the CLI
+
+The command-line interface is perfect for automation, scripting, and server administrators.
+
+<Steps>
+  <Step title="Install Java 17 or Higher">
+    Verify your Java installation:
+    
+    ```bash
+    java -version
+    ```
+    
+    The output should show Java 17 or higher. If not installed, download from:
+    - [Oracle JDK](https://www.oracle.com/java/technologies/downloads/)
+    - [OpenJDK](https://adoptium.net/)
+  </Step>
+  
+  <Step title="Download Chunker CLI">
+    Download `chunker-cli-{version}.jar` from the [GitHub releases page](https://github.com/HiveGamesOSS/Chunker/releases).
+  </Step>
+  
+  <Step title="Verify Installation">
+    Test the CLI by running:
+    
+    ```bash
+    java -jar chunker-cli-{version}.jar --version
+    ```
+    
+    This should display the Chunker version information.
+  </Step>
+</Steps>
+
+### CLI Memory Configuration
+
+For large world conversions, increase the JVM heap size:
+
+```bash
+# Allocate 8GB of memory
+java -Xmx8G -jar chunker-cli-{version}.jar -i input_world -f BEDROCK_1_20_80 -o output
+
+# Set both minimum and maximum
+java -Xms4G -Xmx8G -jar chunker-cli-{version}.jar -i input_world -f BEDROCK_1_20_80 -o output
+```
+
+<Warning>
+If you encounter `OutOfMemoryError` during conversion, increase the heap size with `-Xmx` flag. Large worlds may require 8GB or more.
+</Warning>
+
+## Building from Source
+
+For developers who want to build Chunker from source:
+
+<Steps>
+  <Step title="Clone the Repository">
+    ```bash
+    git clone https://github.com/HiveGamesOSS/Chunker.git
+    cd Chunker
+    ```
+  </Step>
+  
+  <Step title="Build with Gradle">
+    Build the CLI:
+    ```bash
+    ./gradlew build
+    ```
+    
+    Build the desktop app:
+    ```bash
+    ./gradlew :app:build
+    ```
+  </Step>
+  
+  <Step title="Find the Binaries">
+    - CLI JAR: `build/libs/chunker-cli-{version}.jar`
+    - Native executables: `build/libs/windows/`, `build/libs/linux/`, or `build/libs/mac/`
+    - Desktop app: `build/libs/{platform}/`
+  </Step>
+</Steps>
+
+<Note>
+You can skip tests during build by adding `-x test` to the gradle command.
+</Note>
+
+## Verifying Your Installation
+
+To verify Chunker is working correctly:
+
+<Tabs>
+  <Tab title="Desktop App">
+    Launch the application. You should see the Chunker interface with options to select input and output directories.
+  </Tab>
+  <Tab title="CLI">
+    Run the help command:
+    ```bash
+    java -jar chunker-cli-{version}.jar --help
+    ```
+    
+    This displays all available options and parameters.
+  </Tab>
+</Tabs>
+
+## Next Steps
+
+<Card title="Quick Start Guide" icon="rocket" href="/quickstart">
+  Ready to convert your first world? Follow our step-by-step quick start guide.
+</Card>

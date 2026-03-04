@@ -1,0 +1,189 @@
+---
+title: Building from Source
+description: Learn how to build Chunker from source code
+---
+
+Chunker is split into two main components: the `cli` module (a pure Java application for world conversion) and the `app` module (an Electron-based frontend). This guide covers how to build both components from source.
+
+## Requirements
+
+Before building Chunker, ensure you have the following installed:
+
+- **Git** - For cloning the repository
+- **Java 17 or higher** - Required for compiling and running Chunker
+- **Gradle** (Optional) - The project includes a Gradle wrapper (`gradlew`), so a system-wide Gradle installation is not required
+
+## Cloning the Repository
+
+First, clone the Chunker repository:
+
+```bash
+git clone git://github.com/HiveGamesOSS/Chunker.git
+cd Chunker
+```
+
+## Building the Project
+
+<Steps>
+  <Step title="Build with Gradle">
+    Use the Gradle wrapper to build the entire project:
+
+    ```bash
+    ./gradlew build
+    ```
+
+    This command will:
+    - Compile all source code
+    - Run the test suite
+    - Generate JAR files
+    - Package the application
+
+    <Note>
+      On Windows, use `gradlew.bat` instead of `./gradlew`
+    </Note>
+  </Step>
+
+  <Step title="Locate Build Artifacts">
+    After a successful build, you can find the compiled binaries in:
+
+    - **CLI JAR**: `build/libs/chunker-cli-VERSION.jar`
+    - **Native executables**: `build/libs/windows/`, `build/libs/linux/`, or `build/libs/mac/` (depending on your platform)
+  </Step>
+</Steps>
+
+## Build Options
+
+### Skip Tests
+
+If you want to build without running tests, append `-x test` to the build command:
+
+```bash
+./gradlew build -x test
+```
+
+### Build CLI Only
+
+To build only the CLI module without the Electron app:
+
+```bash
+./gradlew :cli:build
+```
+
+### Build Native Packages
+
+To create platform-specific native packages using jpackage:
+
+```bash
+./gradlew :cli:jpackage
+```
+
+This generates native application bundles for your current platform in `build/libs/packaged/`.
+
+### Clean Build
+
+To remove all build artifacts and start fresh:
+
+```bash
+./gradlew clean
+```
+
+## Building the Electron App
+
+The `app` module provides a desktop interface for Chunker using Electron.
+
+<Steps>
+  <Step title="Install Node Dependencies">
+    ```bash
+    ./gradlew :app:installDependencies
+    ```
+  </Step>
+
+  <Step title="Build the App">
+    ```bash
+    ./gradlew :app:build
+    ```
+
+    This will:
+    - Build the CLI module via jpackage
+    - Install npm dependencies
+    - Package the Electron application
+  </Step>
+
+  <Step title="Run in Development Mode">
+    To run the app in development mode:
+
+    ```bash
+    ./gradlew :app:start
+    ```
+
+    <Note>
+      When running through Gradle, the process may not stop cleanly. You may need to manually kill the Node process.
+    </Note>
+  </Step>
+</Steps>
+
+## Project Structure
+
+Chunker uses a multi-module Gradle project:
+
+```
+Chunker/
+├── cli/              # Core conversion logic and CLI interface
+│   ├── src/
+│   └── build.gradle.kts
+├── app/              # Electron frontend
+│   ├── electron/
+│   └── build.gradle.kts
+├── settings.gradle.kts
+└── build/
+    └── libs/         # Build output directory
+```
+
+## Gradle Configuration
+
+The project uses Gradle Kotlin DSL for build configuration:
+
+- **Java Toolchain**: Java 17
+- **Shadow JAR**: Creates an uber-JAR with all dependencies included
+- **jpackage**: Generates native executables for Windows, Linux, and macOS
+- **Node Plugin**: Manages Node.js and npm for the Electron app (uses Node 24.13.0, npm 11.8.0)
+
+## Dependencies
+
+Chunker also uses its own fork of a Java LevelDB implementation: [leveldb-mcpe-java](https://github.com/HiveGamesOSS/leveldb-mcpe-java/)
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Build fails with 'Java version' error">
+    Ensure you have Java 17 or higher installed and set as your `JAVA_HOME`:
+
+    ```bash
+    java -version
+    ```
+
+    If needed, update your Java installation or configure the Gradle toolchain.
+  </Accordion>
+
+  <Accordion title="Permission denied when running gradlew">
+    On Linux/macOS, make the Gradle wrapper executable:
+
+    ```bash
+    chmod +x gradlew
+    ```
+  </Accordion>
+
+  <Accordion title="Out of memory during build">
+    The build process can be memory-intensive. Increase the heap size:
+
+    ```bash
+    ./gradlew build -Xmx4G
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+- Learn about [testing](/development/testing) your build
+- Review [contribution guidelines](/development/contributing)
+- Explore the [CLI usage](/usage/cli-usage) documentation

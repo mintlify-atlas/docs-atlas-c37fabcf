@@ -1,0 +1,257 @@
+---
+title: Testing
+description: Learn how to run tests and understand the test structure in Chunker
+---
+
+Chunker includes a comprehensive test suite to validate data integrity, block mappings, and world conversions. The project uses JUnit 5 for testing with support for parameterized tests and parallel execution.
+
+## Running Tests
+
+### Standard Test Suite
+
+To run the default test suite:
+
+```bash
+./gradlew test
+```
+
+This runs all tests except those tagged as "LongRunning". The tests are configured with:
+- Maximum heap size: 4GB
+- Parallel execution where applicable
+- Excluded tags: `LongRunning`
+
+### Long-Running Tests
+
+Some tests are excluded from the default suite because they can take over 30 minutes to complete. To run these tests:
+
+```bash
+./gradlew longRunningTest
+```
+
+These tests use:
+- Maximum heap size: 8GB
+- No tag exclusions (runs all tests)
+
+<Warning>
+  Long-running tests perform exhaustive world conversion testing across all supported format combinations and may take significant time and resources to complete.
+</Warning>
+
+### Skip Tests During Build
+
+If you need to build without running tests:
+
+```bash
+./gradlew build -x test
+```
+
+## Test Structure
+
+Chunker's tests are organized into several categories:
+
+### Unit Tests
+
+Tests for core functionality and data structures:
+
+<CardGroup cols={2}>
+  <Card title="NBT Tests" icon="file-code">
+    - Tag serialization/deserialization
+    - Reader/writer implementations
+    - Java and Bedrock NBT formats
+  </Card>
+  
+  <Card title="Resolver Tests" icon="arrows-rotate">
+    - Block identifier validation
+    - Item identifier validation
+    - Biome mappings
+    - Property resolvers
+  </Card>
+  
+  <Card title="Mapping Tests" icon="map">
+    - Block mapping files
+    - Item mapping files
+    - Identifier state handling
+  </Card>
+  
+  <Card title="Utility Tests" icon="wrench">
+    - Basic property handling
+    - Vanilla block groups
+    - Helper functions
+  </Card>
+</CardGroup>
+
+### Integration Tests
+
+The most comprehensive test suite validates world conversions across all supported formats:
+
+```java
+package com.hivemc.chunker.conversion.integration;
+
+public class WorldConversionIntegrationTests {
+    // Tests conversions between all format combinations
+}
+```
+
+These tests:
+- Convert sample worlds between Java and Bedrock editions
+- Test all supported version combinations
+- Validate that `level.dat` is correctly written
+- Check for exceptions during conversion
+- Verify world settings and preview generation
+
+### Validation Tests
+
+Chunker performs automated validation to catch mapping errors:
+
+- **Block Identifier Validation**: Ensures all block identifiers match the palette for Java and Bedrock editions
+- **Item Identifier Validation**: Validates item identifiers against game data
+- **Biome Validation**: Checks biome ID and name mappings
+
+<Note>
+  These validation tests help identify faulty mappings during the build process, preventing issues from reaching production.
+</Note>
+
+## Test Configuration
+
+Tests are configured in `cli/build.gradle.kts`:
+
+```kotlin
+tasks.test {
+    maxHeapSize = "4096M"
+    useJUnitPlatform {
+        excludeTags("LongRunning")
+    }
+}
+
+tasks.register<Test>("longRunningTest") {
+    description = "Runs long-running tests"
+    maxHeapSize = "8192M"
+    useJUnitPlatform {
+        excludeTags()
+    }
+}
+```
+
+## Running Specific Tests
+
+### By Class
+
+Run tests from a specific class:
+
+```bash
+./gradlew test --tests "com.hivemc.chunker.nbt.JavaNBTFileTests"
+```
+
+### By Pattern
+
+Run tests matching a pattern:
+
+```bash
+./gradlew test --tests "*NBT*"
+```
+
+### By Package
+
+Run all tests in a package:
+
+```bash
+./gradlew test --tests "com.hivemc.chunker.conversion.java.resolver.*"
+```
+
+## Continuous Integration
+
+Chunker uses GitHub Actions for automated testing on every push and pull request.
+
+### CI Workflow
+
+The main CI workflow (`.github/workflows/build_test_linux.yml`) runs on:
+- Push to `main` branch
+- Approved pull requests
+
+<Steps>
+  <Step title="Checkout Code">
+    Clones the repository with LFS and submodules
+  </Step>
+  
+  <Step title="Setup Environment">
+    - Installs JDK 17 (Temurin distribution)
+    - Configures Gradle
+    - Makes gradlew executable
+  </Step>
+  
+  <Step title="Build and Test">
+    Runs `./gradlew build` which includes:
+    - Compilation
+    - Running the test suite
+    - Packaging artifacts
+  </Step>
+  
+  <Step title="Upload Artifacts">
+    Uploads build artifacts:
+    - CLI JAR files to `jar-builds`
+    - Linux native builds to `linux-builds`
+  </Step>
+</Steps>
+
+## Test Resources
+
+Integration tests use sample worlds stored in `cli/src/test/resources/integration/worlds/`:
+
+- `JAVA_1_20_5.zip`
+- `JAVA_1_19_4.zip`
+- `JAVA_1_15_2.zip`
+- `JAVA_1_16_5.zip`
+- `JAVA_1_12_2.zip`
+- `BEDROCK_R20_80.zip`
+- `BEDROCK_R19_30.zip`
+- `BEDROCK_R18_30.zip`
+- `BEDROCK_R12.zip`
+
+These worlds are automatically unzipped and used for conversion testing.
+
+## Writing Tests
+
+When contributing to Chunker, follow these testing guidelines:
+
+1. **Use JUnit 5**: Leverage `@Test`, `@ParameterizedTest`, and other JUnit 5 annotations
+2. **Tag Long Tests**: Use `@Tag("LongRunning")` for tests that take significant time
+3. **Parallel Execution**: Use `@Execution(ExecutionMode.CONCURRENT)` where safe
+4. **Validate Data**: Always assert expected outcomes and check for exceptions
+5. **Clean Up Resources**: Use try-finally blocks to clean up test files and directories
+
+## Debugging Test Failures
+
+### Verbose Output
+
+Get more detailed test output:
+
+```bash
+./gradlew test --info
+```
+
+### Stack Traces
+
+Show full stack traces for failures:
+
+```bash
+./gradlew test --stacktrace
+```
+
+### Test Reports
+
+After running tests, view detailed HTML reports at:
+
+```
+cli/build/reports/tests/test/index.html
+```
+
+## Performance Testing
+
+<Info>
+  Integration tests automatically measure conversion performance as they process real world data. Monitor test execution times to identify performance regressions.
+</Info>
+
+## Next Steps
+
+- Review [building instructions](/development/building)
+- Learn about [contributing](/development/contributing)
+- Explore the [project structure](/development/building)

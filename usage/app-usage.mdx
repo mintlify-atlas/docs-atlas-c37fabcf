@@ -1,0 +1,350 @@
+---
+title: Desktop App Usage
+description: Guide to using the Chunker desktop application
+---
+
+## Overview
+
+The Chunker desktop application provides a user-friendly interface for converting Minecraft worlds between Java and Bedrock editions. Built with Electron, it offers an intuitive step-by-step workflow with advanced customization options.
+
+## Installation
+
+1. Download the appropriate version for your operating system from the [releases page](https://github.com/HiveGamesOSS/Chunker/releases)
+2. Extract the archive (if applicable)
+3. Run the Chunker executable:
+   - **Windows**: `Chunker.exe`
+   - **macOS**: `Chunker.app`
+   - **Linux**: `Chunker` or `Chunker.AppImage`
+
+### Memory Configuration
+
+Chunker defaults to using 75% of your available system memory. You can customize this:
+
+```bash
+# Windows
+Chunker.exe -Xmx8G
+
+# macOS/Linux
+./Chunker -Xmx8G
+```
+
+For additional JVM options:
+
+```bash
+Chunker.exe --java-options="-Xmx8G -Xms4G"
+```
+
+<Note>
+  The `-Xmx` and `-Xms` flags are forwarded to the backing JVM. Use `--java-options` for other JVM parameters.
+</Note>
+
+## Conversion Workflow
+
+The app guides you through a multi-step process to convert your world:
+
+### Step 1: Select World
+
+Choose your Minecraft world using one of three methods:
+
+<Tabs>
+  <Tab title="World Folder">
+    Click **Choose world folder** and navigate to your world directory. The folder must contain a `level.dat` file.
+    
+    **Common world locations:**
+    - **Java**: `%appdata%/.minecraft/saves/` (Windows) or `~/Library/Application Support/minecraft/saves/` (macOS)
+    - **Bedrock**: `%localappdata%/Packages/Microsoft.MinecraftUWP_8wekyb3d8bbwe/LocalState/games/com.mojang/minecraftWorlds/` (Windows)
+  </Tab>
+  
+  <Tab title="Archive File">
+    Click **Select archive** and choose a `.zip` or `.mcworld` file containing your world.
+    
+    Supported archive formats:
+    - `.zip` - Standard ZIP archive
+    - `.mcworld` - Bedrock Edition world archive
+  </Tab>
+  
+  <Tab title="Drag and Drop">
+    Drag your world folder or archive file directly into the Chunker window.
+  </Tab>
+</Tabs>
+
+After selecting a world, Chunker will:
+1. Prepare the world files
+2. Detect the Minecraft version automatically
+3. Display the detected version and available conversion options
+
+### Step 2: Export As
+
+Select the target Minecraft version for your converted world.
+
+
+
+The available versions are displayed with the most recent at the top. Your current version is marked as "source".
+
+<Accordion title="Conversion Modes">
+  **Convert** - Quick conversion with default settings
+  
+  **Advanced Mode** - Access to advanced settings including:
+  - World preview
+  - Custom block mappings
+  - World settings modification
+  - Dimension pruning
+  - Converter settings
+</Accordion>
+
+### Step 3: Advanced Settings (Optional)
+
+If you selected **Advanced Mode**, you'll access a settings panel with multiple tabs:
+
+#### World Preview
+
+View a 2D or 3D preview of your world before conversion. This helps you verify that the correct world was selected.
+
+#### World Settings
+
+Modify world properties such as:
+- World name
+- Game mode (Survival, Creative, Adventure)
+- Difficulty (Peaceful, Easy, Normal, Hard)
+- Spawn point coordinates
+- Game rules
+- Weather settings
+
+<Warning>
+  Changes to world settings will override the original values in the converted world.
+</Warning>
+
+#### Dimensions/Pruning
+
+Control which dimensions and regions to include in the conversion:
+
+- **Dimension Selection**: Choose which dimensions to convert (Overworld, Nether, End)
+- **Pruning**: Define coordinate ranges to exclude specific chunks from conversion
+- **Benefits**: Reduce conversion time and output world size
+
+**Example use case**: Convert only the spawn area of a large world:
+```json
+{
+  "Overworld": {
+    "minX": -1000,
+    "maxX": 1000,
+    "minZ": -1000,
+    "maxZ": 1000
+  }
+}
+```
+
+#### Block Mapping
+
+Customize how specific blocks are converted:
+
+- Search for blocks by name or ID
+- View default mappings
+- Create custom block mappings
+- Override default conversion behavior
+
+**Example**: Map all Java Edition granite to Bedrock Edition diorite instead of the default mapping.
+
+#### Converter Settings
+
+Fine-tune the conversion process:
+
+<ParamField path="customIdentifiers" type="boolean" default="true">
+  **Passthrough Custom Identifiers**
+  
+  Allow custom identifiers outside the minecraft namespace to be read/written. Disable to prevent modded blocks from being converted.
+</ParamField>
+
+<ParamField path="blockConnections" type="boolean" default="true">
+  **Calculate Block Connections Using Neighbours**
+  
+  Use neighboring chunks to determine block connections (fences, chests, panes). Improves accuracy but may slow conversion.
+</ParamField>
+
+<ParamField path="itemConversion" type="boolean" default="true">
+  **Convert Items**
+  
+  Enable conversion of items in chests, inventories, and other containers.
+</ParamField>
+
+<ParamField path="lootTableConversion" type="boolean" default="true">
+  **Convert Structure Loot Tables**
+  
+  Attempt to match and convert structure loot table files.
+</ParamField>
+
+<ParamField path="mapConversion" type="boolean" default="true">
+  **In-Game Map Conversion**
+  
+  Convert in-game map items and their data.
+</ParamField>
+
+<ParamField path="discardEmptyChunks" type="boolean" default="false">
+  **Discard Empty Chunks**
+  
+  Don't write chunks that contain no blocks. Reduces output world size.
+</ParamField>
+
+<ParamField path="preventYBiomeBlending" type="boolean" default="false">
+  **Prevent Y Biome Blending**
+  
+  Require an empty chunk at the top of each column to prevent vertical biome blending (Java Edition only).
+</ParamField>
+
+<ParamField path="enableCompact" type="boolean" default="true">
+  **Enable LevelDB Compact** (Bedrock only)
+  
+  Compact the LevelDB database at the end of conversion. May increase conversion time but optimizes the output world.
+</ParamField>
+
+##### Exporting Settings
+
+You can export your settings for reuse:
+
+<Tabs>
+  <Tab title="For Preloading">
+    Click **Save .zip** to download a ZIP file containing:
+    - `world_settings.chunker.json`
+    - `converter_settings.chunker.json`
+    - `block_mappings.chunker.json`
+    - `pruning.chunker.json`
+    - `dimension_mappings.chunker.json`
+    
+    Place these files in the same directory as your world's `level.dat` to automatically load them when selecting the world in Chunker.
+  </Tab>
+  
+  <Tab title="For CLI Usage">
+    Click **Export** to view the equivalent CLI command with all your current settings. Copy this command to use with the Chunker CLI.
+  </Tab>
+</Tabs>
+
+### Step 4: Processing
+
+The conversion process begins after you click **Convert**.
+
+```
+Converting from Java Edition 1.20.5 to Bedrock Edition 1.20.80
+▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░ 50.00%
+```
+
+Progress is displayed with:
+- Source and target versions
+- Real-time progress percentage
+- Estimated time remaining (when available)
+
+For Bedrock conversions with compaction enabled:
+```
+Compacting world, this may take a while...
+```
+
+<Info>
+  Large worlds may take several minutes to convert. Don't close Chunker during this process.
+</Info>
+
+### Step 5: Save World
+
+Once conversion completes, you can save the converted world:
+
+1. Click **Save** to choose where to save the converted world
+2. The world is packaged as:
+   - `.zip` archive for Java Edition
+   - `.mcworld` or folder for Bedrock Edition
+
+#### Conversion Logs
+
+If there were any issues during conversion:
+- **Errors**: Error IDs are displayed for support purposes
+- **Missing Identifiers**: Click **Show Output Log** to view blocks that couldn't be mapped
+
+<Accordion title="Understanding Missing Identifiers">
+  Missing identifiers occur when a block in the input world doesn't have a mapping to the output format. This is common for:
+  - Modded blocks
+  - Blocks from newer versions not yet supported
+  - Custom blocks from resource packs
+  
+  These blocks are typically converted to air or a similar block.
+</Accordion>
+
+After saving, click **Restart** to convert another world.
+
+## Features
+
+### Automatic Version Detection
+
+Chunker automatically detects the Minecraft version of your world by analyzing the world files. No manual version selection required.
+
+### Drag and Drop Support
+
+Simply drag world folders or archive files into the Chunker window to begin the conversion process.
+
+### Cross-Platform
+
+Available for Windows, macOS, and Linux with native executables for each platform.
+
+### World Preview
+
+Visualize your world before conversion to ensure you've selected the correct world.
+
+### Batch Processing
+
+While the GUI doesn't support batch processing directly, you can use the [CLI](/usage/cli-usage) for automated batch conversions.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Failed to connect to backend">
+    The desktop app uses a Java backend process. If this error occurs:
+    - Ensure Java 17+ is installed on your system
+    - Try closing and reopening Chunker
+    - Check if antivirus software is blocking the process
+    - Verify you have sufficient memory available
+  </Accordion>
+  
+  <Accordion title="Invalid World error">
+    This occurs when the selected folder doesn't contain a valid `level.dat` file:
+    - Ensure you're selecting the world folder, not a parent directory
+    - Verify the world isn't corrupted
+    - Try selecting the world using a different method (archive vs folder)
+  </Accordion>
+  
+  <Accordion title="Out of memory during conversion">
+    If Chunker runs out of memory:
+    - Launch Chunker with more memory: `Chunker.exe -Xmx16G`
+    - Use dimension pruning to reduce the conversion size
+    - Close other applications to free up RAM
+    - Try converting on a machine with more memory
+  </Accordion>
+  
+  <Accordion title="Conversion stops at 100%">
+    If using Bedrock output with compaction enabled, the compaction phase can take several additional minutes. Wait for the "Finished compacting world" message.
+  </Accordion>
+  
+  <Accordion title="Converted world won't load in Minecraft">
+    Possible causes:
+    - Incompatible NBT data (if using Keep Original NBT)
+    - Unsupported blocks in the source world
+    - Corrupted conversion output
+    
+    Try:
+    - Converting again without custom settings
+    - Disabling Keep Original NBT if enabled
+    - Checking the output log for missing identifiers
+  </Accordion>
+</AccordionGroup>
+
+## Limitations
+
+The following features have limited or no conversion support:
+
+- **Entities**: Only paintings and item frames are converted. Other entities (mobs, armor stands, etc.) are not converted.
+- **Structure Data**: Village, stronghold, and other structure data is not preserved.
+
+<Info>
+  For more details on supported features, see the [Chunker README](https://github.com/HiveGamesOSS/Chunker#currently-unsupported-features).
+</Info>
+
+## See Also
+
+- [CLI Usage](/usage/cli-usage) - Command-line interface for automation
+- [Supported Versions](/usage/supported-versions) - Complete list of supported Minecraft versions
+- [Microsoft Creator Docs](https://learn.microsoft.com/en-us/minecraft/creator/documents/chunkeroverview?view=minecraft-bedrock-stable) - Official Chunker documentation

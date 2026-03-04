@@ -1,0 +1,281 @@
+---
+title: Contributing
+description: Guidelines for contributing to the Chunker project
+---
+
+Thank you for your interest in contributing to Chunker! This guide will help you understand how to contribute effectively to the project.
+
+## Before You Start
+
+Before contributing, please:
+
+1. **Search existing issues** to ensure your bug report or feature request doesn't already exist
+2. **Keep contributions focused** to just the feature or bug fix you're addressing
+3. **Open an issue first** if you're unsure about your implementation approach
+
+<Note>
+  Our team reviews all contributions to ensure they meet project standards and are properly tested. Focused, well-documented changes are easier to review and merge.
+</Note>
+
+## Getting Started
+
+<Steps>
+  <Step title="Fork and Clone">
+    Fork the repository and clone it locally:
+
+    ```bash
+    git clone git://github.com/YOUR_USERNAME/Chunker.git
+    cd Chunker
+    ```
+  </Step>
+
+  <Step title="Set Up Development Environment">
+    Ensure you have the required tools:
+    - Java 17 or higher
+    - Git
+    - Gradle (wrapper included)
+
+    Verify your setup by building the project:
+
+    ```bash
+    ./gradlew build
+    ```
+  </Step>
+
+  <Step title="Create a Branch">
+    Create a new branch for your contribution:
+
+    ```bash
+    git checkout -b feature/your-feature-name
+    ```
+
+    Use descriptive branch names like:
+    - `fix/entity-conversion-crash`
+    - `feature/add-version-support`
+    - `docs/update-build-instructions`
+  </Step>
+
+  <Step title="Make Your Changes">
+    Implement your changes following the project's coding standards and guidelines.
+  </Step>
+
+  <Step title="Test Your Changes">
+    Run the test suite to ensure nothing breaks:
+
+    ```bash
+    ./gradlew test
+    ```
+  </Step>
+
+  <Step title="Commit and Push">
+    Commit your changes with clear, descriptive messages:
+
+    ```bash
+    git add .
+    git commit -m "Fix: Resolve NPE in block conversion"
+    git push origin feature/your-feature-name
+    ```
+  </Step>
+
+  <Step title="Open a Pull Request">
+    Create a pull request from your fork to the main repository.
+  </Step>
+</Steps>
+
+## Contributor License Agreement (CLA)
+
+When you submit a pull request, a CLA bot will automatically check if you need to sign a Contributor License Agreement.
+
+<Info>
+  The CLA declares that you have the right to grant us the rights to use your contribution. You only need to sign it once across all Microsoft-related repositories.
+</Info>
+
+For more details, visit: https://cla.opensource.microsoft.com
+
+## Pull Request Process
+
+### What to Include
+
+Your pull request should:
+
+- **Describe the change**: Clearly explain what you're changing and why
+- **Reference issues**: Link to related GitHub issues (e.g., "Fixes #123")
+- **Include tests**: Add or update tests to cover your changes
+- **Update documentation**: Modify relevant docs if your changes affect usage
+- **Keep it focused**: Limit changes to the specific bug or feature
+
+### PR Checklist
+
+Before submitting, ensure:
+
+- [ ] Code builds successfully (`./gradlew build`)
+- [ ] All tests pass (`./gradlew test`)
+- [ ] No new compiler warnings
+- [ ] Code follows project conventions
+- [ ] Documentation is updated if needed
+- [ ] Commit messages are clear and descriptive
+
+## Code of Conduct
+
+This project has adopted the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/version/2/0/code_of_conduct/).
+
+All contributors are expected to:
+- Be respectful and inclusive
+- Accept constructive criticism gracefully
+- Focus on what's best for the community
+- Show empathy towards other community members
+
+## Out of Scope Features
+
+<Warning>
+  Due to the commercial support contract funding Chunker's development, we cannot accept changes that add out-of-scope features. For such features, consider creating a fork instead.
+</Warning>
+
+Out of scope features include (but are not limited to):
+
+- **Entities** (excluding paintings and item frames)
+- **Structure data** (e.g., Villages, Strongholds)
+
+<Note>
+  This list may change over time. Features may be added or removed from this list as the project evolves.
+</Note>
+
+## Development Workflow
+
+### Building
+
+Build the project:
+
+```bash
+./gradlew build
+```
+
+See the [building guide](/development/building) for detailed build instructions.
+
+### Testing
+
+Run tests:
+
+```bash
+# Standard tests
+./gradlew test
+
+# Long-running integration tests
+./gradlew longRunningTest
+```
+
+See the [testing guide](/development/testing) for more testing information.
+
+### Code Style
+
+<CardGroup cols={2}>
+  <Card title="Java Conventions" icon="java">
+    - Use Java 17 features appropriately
+    - Follow standard Java naming conventions
+    - Add meaningful comments for complex logic
+    - Use JetBrains annotations where applicable
+  </Card>
+
+  <Card title="Build Configuration" icon="gear">
+    - Use Kotlin DSL for Gradle files
+    - Keep dependencies up to date
+    - Document custom Gradle tasks
+    - Follow existing project structure
+  </Card>
+</CardGroup>
+
+## Types of Contributions
+
+### Bug Fixes
+
+1. **Report the bug**: Create a GitHub issue with reproduction steps
+2. **Verify the fix**: Ensure your fix resolves the issue without breaking existing functionality
+3. **Add tests**: Include tests that prevent regression
+
+### Adding Version Support
+
+When adding support for new Minecraft versions:
+
+1. Update version enums and constants
+2. Add or update block/item mappings
+3. Include validation tests for the new version
+4. Test conversions to/from the new version
+5. Update documentation with supported versions
+
+### Documentation Improvements
+
+Documentation contributions are welcome:
+
+- Fix typos or unclear explanations
+- Add examples and usage scenarios
+- Improve API documentation
+- Expand troubleshooting guides
+
+### Mapping Improvements
+
+Block and item mapping contributions:
+
+1. Ensure mappings are accurate
+2. Test with real world data
+3. Validate identifiers against game palettes
+4. Document any edge cases or limitations
+
+## Testing Your Contributions
+
+Chunker's automated testing helps catch issues:
+
+<AccordionGroup>
+  <Accordion title="Block/Item Validation">
+    Identifier validation tests run automatically during `./gradlew test` to ensure all mappings are valid against game palettes.
+  </Accordion>
+
+  <Accordion title="Integration Tests">
+    World conversion tests validate that your changes don't break existing functionality. Run `./gradlew test` for a sample or `./gradlew longRunningTest` for comprehensive testing.
+  </Accordion>
+
+  <Accordion title="Manual Testing">
+    Test your changes with real Minecraft worlds:
+
+    ```bash
+    java -jar build/libs/chunker-cli-VERSION.jar \
+      -i "test_world" \
+      -f BEDROCK_1_20_80 \
+      -o "output"
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Getting Help
+
+<CardGroup cols={2}>
+  <Card title="GitHub Issues" icon="github">
+    Ask questions or report problems:
+    [github.com/HiveGamesOSS/Chunker/issues](https://github.com/HiveGamesOSS/Chunker/issues)
+  </Card>
+
+  <Card title="Documentation" icon="book">
+    Review project documentation:
+    [Microsoft Creator Docs](https://learn.microsoft.com/en-us/minecraft/creator/documents/chunkeroverview)
+  </Card>
+</CardGroup>
+
+## Project Maintenance
+
+This project is maintained by [Hive Games](https://playhive.com) and receives funding from Mojang Studios. Mojang Studios and its parent company Microsoft assume no responsibility for the contents of this project.
+
+## Join the Team
+
+Interested in working on Chunker full-time? Hive Games is hiring!
+
+Check out open positions: [jobs.playhive.com/software-engineer-java](https://jobs.playhive.com/software-engineer-java-186860/)
+
+## License
+
+By contributing to Chunker, you agree that your contributions will be licensed under the MIT License. See the [LICENSE](https://github.com/HiveGamesOSS/Chunker/blob/main/LICENSE) file for details.
+
+## Next Steps
+
+- Learn about [building from source](/development/building)
+- Understand [testing procedures](/development/testing)
+- Explore the [CLI interface](/usage/cli-usage)
+- Review [advanced settings](/advanced/configuration)

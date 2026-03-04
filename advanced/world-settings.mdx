@@ -1,0 +1,449 @@
+---
+title: World Settings
+description: Customize world-level properties like game rules, difficulty, and spawn points during conversion
+---
+
+## Overview
+
+World settings allow you to customize world-level properties during conversion. This includes game rules, difficulty, spawn points, and other world metadata that gets embedded in the level.dat or equivalent file.
+
+## Configuration File
+
+World settings are defined in `world_settings.chunker.json` or passed via the `-s` flag (CLI.java:163-182).
+
+## File Structure
+
+World settings are stored as a JSON object containing key-value pairs (CLI.java:177):
+
+```json world_settings.chunker.json
+{
+  "LevelName": "My Converted World",
+  "Difficulty": 2,
+  "hardcore": false,
+  "GameType": 0
+}
+```
+
+<Note>
+World settings are applied directly to the world data structure. The available fields depend on the output edition and version.
+</Note>
+
+## Common Settings
+
+While the exact fields available depend on the target edition, here are commonly used settings:
+
+### World Name
+
+```json
+{
+  "LevelName": "My Custom World Name"
+}
+```
+
+Sets the world's display name.
+
+### Difficulty
+
+```json
+{
+  "Difficulty": 2
+}
+```
+
+Values:
+- `0`: Peaceful
+- `1`: Easy
+- `2`: Normal
+- `3`: Hard
+
+### Game Mode
+
+```json
+{
+  "GameType": 1
+}
+```
+
+Values:
+- `0`: Survival
+- `1`: Creative
+- `2`: Adventure
+- `3`: Spectator
+
+### Hardcore Mode (Java)
+
+```json
+{
+  "hardcore": true
+}
+```
+
+Enables hardcore mode (Java Edition only).
+
+### Spawn Position
+
+```json
+{
+  "SpawnX": 0,
+  "SpawnY": 64,
+  "SpawnZ": 0
+}
+```
+
+Sets the world spawn point coordinates.
+
+### Time
+
+```json
+{
+  "Time": 0,
+  "DayTime": 0
+}
+```
+
+Sets the world time:
+- `0`: Dawn
+- `6000`: Noon
+- `12000`: Dusk
+- `18000`: Midnight
+
+## Game Rules
+
+Game rules can also be configured:
+
+```json
+{
+  "GameRules": {
+    "doDaylightCycle": "true",
+    "doMobSpawning": "true",
+    "keepInventory": "true",
+    "mobGriefing": "false"
+  }
+}
+```
+
+<Note>
+Game rule values must be strings (`"true"` or `"false"`), not booleans.
+</Note>
+
+## Complete Examples
+
+### Peaceful Creative World
+
+```json world_settings.chunker.json
+{
+  "LevelName": "Creative Build World",
+  "Difficulty": 0,
+  "GameType": 1,
+  "GameRules": {
+    "doDaylightCycle": "false",
+    "doWeatherCycle": "false",
+    "doMobSpawning": "false"
+  },
+  "Time": 6000,
+  "DayTime": 6000
+}
+```
+
+### Hardcore Survival
+
+```json world_settings.chunker.json
+{
+  "LevelName": "Hardcore Challenge",
+  "Difficulty": 3,
+  "GameType": 0,
+  "hardcore": true,
+  "GameRules": {
+    "naturalRegeneration": "true",
+    "keepInventory": "false"
+  }
+}
+```
+
+### Adventure Map
+
+```json world_settings.chunker.json
+{
+  "LevelName": "Adventure Map",
+  "GameType": 2,
+  "Difficulty": 2,
+  "GameRules": {
+    "commandBlockOutput": "false",
+    "mobGriefing": "false",
+    "doTileDrops": "false",
+    "naturalRegeneration": "false"
+  },
+  "SpawnX": 100,
+  "SpawnY": 64,
+  "SpawnZ": 200
+}
+```
+
+### Skyblock Setup
+
+```json world_settings.chunker.json
+{
+  "LevelName": "Skyblock",
+  "GameType": 0,
+  "Difficulty": 2,
+  "SpawnX": 0,
+  "SpawnY": 100,
+  "SpawnZ": 0,
+  "GameRules": {
+    "keepInventory": "true",
+    "mobGriefing": "false"
+  }
+}
+```
+
+## Usage
+
+<CodeGroup>
+```bash World Folder
+# Place in world directory
+my_world/world_settings.chunker.json
+
+# Run conversion
+java -jar chunker-cli.jar -i my_world -f BEDROCK_1_20_80 -o output
+```
+
+```bash CLI Flag
+java -jar chunker-cli.jar \
+  -i my_world \
+  -f BEDROCK_1_20_80 \
+  -o output \
+  -s world_settings.json
+```
+
+```bash Inline JSON
+java -jar chunker-cli.jar \
+  -i my_world \
+  -f BEDROCK_1_20_80 \
+  -o output \
+  -s '{"LevelName": "My World", "Difficulty": 2}'
+```
+</CodeGroup>
+
+## Java vs Bedrock Differences
+
+### Java Edition Specific
+
+```json
+{
+  "hardcore": true,
+  "allowCommands": true,
+  "DataVersion": 3465
+}
+```
+
+### Bedrock Edition Specific
+
+```json
+{
+  "Generator": 1,
+  "NetherScale": 8,
+  "bonusChestEnabled": false,
+  "bonusChestSpawned": false
+}
+```
+
+### Universal Settings
+
+```json
+{
+  "LevelName": "World",
+  "Difficulty": 2,
+  "GameType": 0,
+  "SpawnX": 0,
+  "SpawnY": 64,
+  "SpawnZ": 0,
+  "Time": 0
+}
+```
+
+## Field Format
+
+World settings use the underlying NBT format field names:
+
+- Field names are **case-sensitive**
+- Integer values: Use numbers (`2`, not `"2"`)
+- Boolean values: Use booleans (`true`, not `"true"`)
+- Game rules: Use strings (`"true"`, not `true`)
+
+<Warning>
+Incorrect field names or types may be silently ignored or cause conversion errors.
+</Warning>
+
+## Common Game Rules
+
+| Rule | Description | Default |
+|------|-------------|----------|
+| `keepInventory` | Keep items on death | `false` |
+| `doDaylightCycle` | Sun and moon move | `true` |
+| `doWeatherCycle` | Weather changes | `true` |
+| `doMobSpawning` | Mobs spawn naturally | `true` |
+| `mobGriefing` | Mobs can destroy blocks | `true` |
+| `naturalRegeneration` | Health regenerates | `true` |
+| `commandBlockOutput` | Show command block output | `true` |
+| `doFireTick` | Fire spreads | `true` |
+| `showDeathMessages` | Show death messages | `true` |
+| `announceAdvancements` | Announce advancements | `true` |
+
+<Note>
+Game rule availability varies by edition and version. Some rules only exist in Java or Bedrock.
+</Note>
+
+## Validation
+
+Chunker applies world settings during conversion (CLI.java:175-181):
+
+- Valid settings are applied to the output world
+- Invalid or unknown fields are typically ignored
+- Type mismatches may cause errors
+
+<Warning>
+Always test your world settings on a copy before using them on important worlds.
+</Warning>
+
+## Discovering Available Settings
+
+To find available settings for your target version:
+
+1. Create a world in the target edition/version
+2. Use NBT editors like NBTExplorer or Amulet
+3. Examine the level.dat file structure
+4. Use those field names in your world_settings.chunker.json
+
+## Exporting Settings
+
+Generate world settings from the web UI:
+
+1. Visit [chunker.app](https://chunker.app)
+2. Go to **Advanced Settings** → **Converter Settings**
+3. Configure world properties
+4. Export the `world_settings.chunker.json` file
+
+## Partial Updates
+
+You only need to specify settings you want to change:
+
+```json
+{
+  "Difficulty": 0
+}
+```
+
+This changes only the difficulty and leaves all other settings unchanged.
+
+## Overriding Original Settings
+
+World settings override values from the input world:
+
+- Input world has `Difficulty: 2`
+- Settings file has `Difficulty: 0`
+- Output world will have `Difficulty: 0`
+
+## Best Practices
+
+1. **Test on copies** before applying to production worlds
+2. **Use minimal settings** - only change what you need
+3. **Document your settings** for future reference
+4. **Check edition compatibility** - some settings are edition-specific
+5. **Validate field names** using NBT editors
+
+## Common Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Reset Difficulty" icon="shield">
+    Change world difficulty after conversion
+  </Card>
+  <Card title="Fix Spawn Point" icon="location-dot">
+    Set correct spawn coordinates
+  </Card>
+  <Card title="Rename World" icon="pen">
+    Give converted world a new name
+  </Card>
+  <Card title="Configure Rules" icon="list-check">
+    Set game rules for maps or servers
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Settings not applying">
+    - Check JSON syntax is valid
+    - Verify field names are spelled correctly (case-sensitive)
+    - Ensure value types match expected format
+    - Check that the setting is supported by target edition
+  </Accordion>
+  
+  <Accordion title="Conversion fails with settings error">
+    - Validate JSON structure
+    - Remove invalid or unknown fields
+    - Check for type mismatches (number vs string)
+    - Test with minimal settings first
+  </Accordion>
+  
+  <Accordion title="Game rules not working">
+    - Ensure game rule values are strings: `"true"` not `true`
+    - Check game rule name spelling
+    - Verify the rule exists in target edition/version
+  </Accordion>
+  
+  <Accordion title="World name unchanged">
+    - Ensure using `LevelName` not `levelName` (case matters)
+    - Check file is being loaded (use `-s` flag to verify)
+    - Try setting in web UI and exporting configuration
+  </Accordion>
+</AccordionGroup>
+
+## Advanced Settings
+
+### World Generation
+
+```json
+{
+  "generatorName": "default",
+  "generatorVersion": 1,
+  "generatorOptions": ""
+}
+```
+
+### World Border
+
+```json
+{
+  "BorderCenterX": 0.0,
+  "BorderCenterZ": 0.0,
+  "BorderSize": 60000000.0
+}
+```
+
+### Version Info
+
+```json
+{
+  "Version": {
+    "Name": "1.20.4"
+  }
+}
+```
+
+<Note>
+Advanced settings should be used with caution. Incorrect values can cause world corruption or loading issues.
+</Note>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Configuration Overview" icon="gear" href="/advanced/configuration">
+    Learn about all configuration options
+  </Card>
+  <Card title="Converter Settings" icon="sliders" href="/advanced/converter-settings">
+    Control conversion behavior
+  </Card>
+  <Card title="Dimension Mapping" icon="layer-group" href="/api/dimension-mapping">
+    Map dimensions between editions
+  </Card>
+</CardGroup>

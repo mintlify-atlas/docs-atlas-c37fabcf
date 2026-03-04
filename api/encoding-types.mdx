@@ -1,0 +1,380 @@
+---
+title: EncodingType
+description: Represents world format types (Java, Bedrock) and manages readers/writers for each format
+---
+
+## Overview
+
+The `EncodingType` class represents a specific world format that can be read from or written to. Chunker includes built-in support for Java Edition, Bedrock Edition, and internal formats for preview generation and settings extraction.
+
+## Class Definition
+
+```java
+package com.hivemc.chunker.conversion.encoding;
+
+public class EncodingType
+```
+
+**Location**: `cli/src/main/java/com/hivemc/chunker/conversion/encoding/EncodingType.java:22`
+
+## Built-in Encoding Types
+
+### JAVA
+
+Reader and writer for Minecraft Java Edition worlds.
+
+```java
+public static final EncodingType JAVA
+```
+
+**Location**: `EncodingType.java:31`
+
+### BEDROCK
+
+Reader and writer for Minecraft Bedrock Edition worlds.
+
+```java
+public static final EncodingType BEDROCK
+```
+
+**Location**: `EncodingType.java:42`
+
+### PREVIEW
+
+Writer for rendering world map previews (internal use).
+
+```java
+public static final EncodingType PREVIEW
+```
+
+**Location**: `EncodingType.java:53`
+
+### SETTINGS
+
+Writer for extracting world settings and in-game maps (internal use).
+
+```java
+public static final EncodingType SETTINGS
+```
+
+**Location**: `EncodingType.java:64`
+
+## Constructor
+
+```java
+public EncodingType(
+    String name,
+    boolean internal,
+    EncoderLevelReaderConstructor<?> readerConstructor,
+    EncoderLevelWriterConstructor<?> writerConstructor,
+    Collection<Version> supportedVersions
+)
+```
+
+<ParamField path="name" type="String" required>
+  The display name of the encoding type in English (e.g., "Java", "Bedrock")
+</ParamField>
+
+<ParamField path="internal" type="boolean" required>
+  Whether the encoding type should be hidden from users (true for PREVIEW and SETTINGS)
+</ParamField>
+
+<ParamField path="readerConstructor" type="EncoderLevelReaderConstructor<?>">
+  Constructor for creating level readers, or null if reading is not supported
+</ParamField>
+
+<ParamField path="writerConstructor" type="EncoderLevelWriterConstructor<?>">
+  Constructor for creating level writers, or null if writing is not supported
+</ParamField>
+
+<ParamField path="supportedVersions" type="Collection<Version>" required>
+  List of Minecraft versions this encoding type supports
+</ParamField>
+
+**Location**: `EncodingType.java:89`
+
+## Core Methods
+
+### createReader()
+
+Create a level reader for this encoding type from an input directory.
+
+```java
+public Optional<? extends LevelReader> createReader(
+    File directory,
+    Converter converter
+)
+```
+
+<ParamField path="directory" type="File" required>
+  The input directory containing the world data
+</ParamField>
+
+<ParamField path="converter" type="Converter" required>
+  The converter instance to use with the reader
+</ParamField>
+
+<ResponseField name="Optional<LevelReader>" type="Optional<? extends LevelReader>">
+  A newly created level reader, or empty if the format cannot be read or version is not detected
+</ResponseField>
+
+**Location**: `EncodingType.java:197`
+
+### createWriter()
+
+Create a level writer for this encoding type targeting a specific version.
+
+```java
+public Optional<? extends LevelWriter> createWriter(
+    File directory,
+    Version version,
+    Converter converter
+)
+```
+
+<ParamField path="directory" type="File" required>
+  The output directory where the world will be written
+</ParamField>
+
+<ParamField path="version" type="Version" required>
+  The target Minecraft version for the output world
+</ParamField>
+
+<ParamField path="converter" type="Converter" required>
+  The converter instance to use with the writer
+</ParamField>
+
+<ResponseField name="Optional<LevelWriter>" type="Optional<? extends LevelWriter>">
+  A newly created level writer, or empty if the version is not supported
+</ResponseField>
+
+**Location**: `EncodingType.java:210`
+
+### getName()
+
+Get the display name of this encoding type.
+
+```java
+public String getName()
+```
+
+**Returns**: The name in English (e.g., "Java", "Bedrock")
+
+**Location**: `EncodingType.java:186`
+
+### getSupportedVersions()
+
+Get all versions supported by this encoding type.
+
+```java
+public Collection<Version> getSupportedVersions()
+```
+
+**Returns**: A collection of supported Minecraft versions
+
+**Location**: `EncodingType.java:220`
+
+### isInternal()
+
+Check if this encoding type is internal (not shown to users).
+
+```java
+public boolean isInternal()
+```
+
+**Returns**: `true` if this is an internal format like PREVIEW or SETTINGS
+
+**Location**: `EncodingType.java:229`
+
+## Static Methods
+
+### register()
+
+Create and register a new encoding type.
+
+```java
+public static EncodingType register(
+    String name,
+    boolean internal,
+    EncoderLevelReaderConstructor<?> reader,
+    EncoderLevelWriterConstructor<?> writer,
+    Collection<Version> supportedVersions
+)
+```
+
+<ParamField path="name" type="String" required>
+  The display name of the encoding type
+</ParamField>
+
+<ParamField path="internal" type="boolean" required>
+  Whether this should be hidden from users
+</ParamField>
+
+<ParamField path="reader" type="EncoderLevelReaderConstructor<?>">
+  Reader constructor, or null if not readable
+</ParamField>
+
+<ParamField path="writer" type="EncoderLevelWriterConstructor<?>">
+  Writer constructor, or null if not writable
+</ParamField>
+
+<ParamField path="supportedVersions" type="Collection<Version>" required>
+  List of supported versions
+</ParamField>
+
+**Returns**: The newly created and registered encoding type
+
+**Location**: `EncodingType.java:106`
+
+### findReader()
+
+Automatically detect the format of a world directory and create an appropriate reader.
+
+```java
+public static Optional<? extends LevelReader> findReader(
+    File directory,
+    Converter converter
+)
+```
+
+<ParamField path="directory" type="File" required>
+  The input directory to analyze
+</ParamField>
+
+<ParamField path="converter" type="Converter" required>
+  The converter instance to use
+</ParamField>
+
+<ResponseField name="Optional<LevelReader>" type="Optional<? extends LevelReader>">
+  A reader for the detected format, or empty if no format matches
+</ResponseField>
+
+**Location**: `EncodingType.java:136`
+
+### getTypes()
+
+Get all registered encoding types (including internal ones).
+
+```java
+public static Set<EncodingType> getTypes()
+```
+
+**Returns**: An unmodifiable set of all encoding types
+
+**Location**: `EncodingType.java:157`
+
+### getReadableTypes()
+
+Get all encoding types that support reading.
+
+```java
+public static Set<EncodingType> getReadableTypes()
+```
+
+**Returns**: An unmodifiable set of readable encoding types (JAVA, BEDROCK)
+
+**Location**: `EncodingType.java:167`
+
+### getWriteableTypes()
+
+Get all encoding types that support writing.
+
+```java
+public static Set<EncodingType> getWriteableTypes()
+```
+
+**Returns**: An unmodifiable set of writable encoding types (JAVA, BEDROCK, PREVIEW, SETTINGS)
+
+**Location**: `EncodingType.java:177`
+
+## Usage Examples
+
+### Auto-detect and Convert
+
+```java
+import com.hivemc.chunker.conversion.encoding.EncodingType;
+import com.hivemc.chunker.conversion.encoding.base.Version;
+import java.io.File;
+
+// Auto-detect the input format
+File inputDir = new File("path/to/world");
+LevelReader reader = EncodingType.findReader(inputDir, converter)
+    .orElseThrow(() -> new IllegalArgumentException("Unknown world format"));
+
+System.out.println("Detected format: " + reader.getEncodingType().getName());
+```
+
+### Create Specific Format Writer
+
+```java
+import com.hivemc.chunker.conversion.encoding.EncodingType;
+import com.hivemc.chunker.conversion.encoding.base.Version;
+
+// Create a Bedrock 1.20.0 writer
+File outputDir = new File("path/to/output");
+Version targetVersion = new Version(1, 20, 0);
+
+LevelWriter writer = EncodingType.BEDROCK
+    .createWriter(outputDir, targetVersion, converter)
+    .orElseThrow(() -> new IllegalArgumentException("Version not supported"));
+```
+
+### List Supported Versions
+
+```java
+import com.hivemc.chunker.conversion.encoding.EncodingType;
+
+// List all supported Java versions
+System.out.println("Java Edition versions:");
+for (Version version : EncodingType.JAVA.getSupportedVersions()) {
+    System.out.println("  " + version);
+}
+
+// List all supported Bedrock versions
+System.out.println("\nBedrock Edition versions:");
+for (Version version : EncodingType.BEDROCK.getSupportedVersions()) {
+    System.out.println("  " + version);
+}
+```
+
+### Check Available Formats
+
+```java
+import com.hivemc.chunker.conversion.encoding.EncodingType;
+
+// List all non-internal formats
+System.out.println("Available formats:");
+for (EncodingType type : EncodingType.getTypes()) {
+    if (!type.isInternal()) {
+        System.out.println("  " + type.getName() + 
+            " (Read: " + EncodingType.getReadableTypes().contains(type) +
+            ", Write: " + EncodingType.getWriteableTypes().contains(type) + ")");
+    }
+}
+```
+
+## Related Types
+
+### Version
+
+Represents a Minecraft version in major.minor.patch format.
+
+```java
+public class Version {
+    public Version(int major, int minor, int patch)
+    public static Version fromString(String input)
+    public int getMajor()
+    public int getMinor()
+    public int getPatch()
+    public boolean isGreaterThan(Version version)
+    public boolean isGreaterThanOrEqual(Version version)
+}
+```
+
+**Location**: `cli/src/main/java/com/hivemc/chunker/conversion/encoding/base/Version.java:11`
+
+## See Also
+
+- [WorldConverter](/api/world-converter) - Main conversion class
+- [LevelReader](/api/readers-writers#levelreader) - Reader interface
+- [LevelWriter](/api/readers-writers#levelwriter) - Writer interface

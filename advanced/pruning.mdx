@@ -1,0 +1,417 @@
+---
+title: World Pruning
+description: Optimize world size by selectively keeping or removing regions during conversion
+---
+
+## Overview
+
+World pruning allows you to selectively keep or remove specific regions of your world during conversion. This is useful for:
+
+- Reducing world file size
+- Removing unused or unwanted areas
+- Keeping only specific regions (spawn area, builds, etc.)
+- Creating smaller test worlds
+
+## Configuration File
+
+Pruning is configured via `pruning.chunker.json` placed in your world folder or specified with the `-p` flag.
+
+## File Structure
+
+The pruning configuration uses a dimension-based structure (DimensionPruningList.java:1-33, CLI.java:196-210):
+
+```json pruning.chunker.json
+{
+  "configs": [
+    {
+      "include": true,
+      "regions": [
+        {
+          "minChunkX": -10,
+          "minChunkZ": -10,
+          "maxChunkX": 10,
+          "maxChunkZ": 10
+        }
+      ]
+    },
+    null,
+    null
+  ]
+}
+```
+
+<Note>
+The `configs` array is ordered by dimension: `[OVERWORLD, NETHER, THE_END]` (Dimension.java:19-23).
+</Note>
+
+## Dimension Order
+
+The configs array follows Minecraft's dimension order:
+
+- Index `0`: **Overworld** (`minecraft:overworld`)
+- Index `1`: **Nether** (`minecraft:the_nether`)
+- Index `2`: **The End** (`minecraft:the_end`)
+
+<Warning>
+Use `null` for dimensions you don't want to prune. Missing dimensions or `null` values mean no pruning will occur.
+</Warning>
+
+## Configuration Fields
+
+### Pruning Config
+
+<ParamField path="include" type="boolean" default="true">
+  Whether to **include** or **exclude** the specified regions (PruningConfig.java:10, 33-37)
+  
+  - `true`: Keep only the specified regions (remove everything else)
+  - `false`: Remove the specified regions (keep everything else)
+</ParamField>
+
+<ParamField path="regions" type="array">
+  Array of regions to keep or remove (PruningConfig.java:11, 40-46)
+</ParamField>
+
+### Pruning Region
+
+Each region defines a rectangular area in chunk coordinates (PruningRegion.java:1-69):
+
+<ParamField path="minChunkX" type="integer">
+  Minimum chunk X coordinate (PruningRegion.java:7, 38-40)
+</ParamField>
+
+<ParamField path="minChunkZ" type="integer">
+  Minimum chunk Z coordinate (PruningRegion.java:8, 46-49)
+</ParamField>
+
+<ParamField path="maxChunkX" type="integer">
+  Maximum chunk X coordinate (PruningRegion.java:9, 54-57)
+</ParamField>
+
+<ParamField path="maxChunkZ" type="integer">
+  Maximum chunk Z coordinate (PruningRegion.java:10, 62-65)
+</ParamField>
+
+## Examples
+
+### Keep Only Spawn Area
+
+Keep a 20x20 chunk area around spawn (320x320 blocks):
+
+```json pruning.chunker.json
+{
+  "configs": [
+    {
+      "include": true,
+      "regions": [
+        {
+          "minChunkX": -10,
+          "minChunkZ": -10,
+          "maxChunkX": 10,
+          "maxChunkZ": 10
+        }
+      ]
+    },
+    null,
+    null
+  ]
+}
+```
+
+<Note>
+`"include": true` means only the specified region will be kept. Everything outside will be removed.
+</Note>
+
+### Remove Griefed Area
+
+Remove a specific area that was griefed:
+
+```json pruning.chunker.json
+{
+  "configs": [
+    {
+      "include": false,
+      "regions": [
+        {
+          "minChunkX": 50,
+          "minChunkZ": 50,
+          "maxChunkX": 100,
+          "maxChunkZ": 100
+        }
+      ]
+    },
+    null,
+    null
+  ]
+}
+```
+
+<Note>
+`"include": false` means the specified region will be removed. Everything else will be kept.
+</Note>
+
+### Multiple Regions
+
+Keep multiple separate areas:
+
+```json pruning.chunker.json
+{
+  "configs": [
+    {
+      "include": true,
+      "regions": [
+        {
+          "minChunkX": -10,
+          "minChunkZ": -10,
+          "maxChunkX": 10,
+          "maxChunkZ": 10
+        },
+        {
+          "minChunkX": 100,
+          "minChunkZ": 100,
+          "maxChunkX": 150,
+          "maxChunkZ": 150
+        }
+      ]
+    },
+    null,
+    null
+  ]
+}
+```
+
+### Prune Multiple Dimensions
+
+Prune both Overworld and Nether:
+
+```json pruning.chunker.json
+{
+  "configs": [
+    {
+      "include": true,
+      "regions": [
+        {
+          "minChunkX": -20,
+          "minChunkZ": -20,
+          "maxChunkX": 20,
+          "maxChunkZ": 20
+        }
+      ]
+    },
+    {
+      "include": true,
+      "regions": [
+        {
+          "minChunkX": -5,
+          "minChunkZ": -5,
+          "maxChunkX": 5,
+          "maxChunkZ": 5
+        }
+      ]
+    },
+    null
+  ]
+}
+```
+
+### Prune Only The End
+
+Keep only a small End area, leave other dimensions untouched:
+
+```json pruning.chunker.json
+{
+  "configs": [
+    null,
+    null,
+    {
+      "include": true,
+      "regions": [
+        {
+          "minChunkX": 0,
+          "minChunkZ": 0,
+          "maxChunkX": 10,
+          "maxChunkZ": 10
+        }
+      ]
+    }
+  ]
+}
+```
+
+## Coordinate System
+
+### Understanding Chunk Coordinates
+
+Chunks are 16x16 block areas. To convert block coordinates to chunk coordinates:
+
+```
+chunkX = floor(blockX / 16)
+chunkZ = floor(blockZ / 16)
+```
+
+### Example Conversion
+
+If you want to keep blocks from (-160, 64, -160) to (160, 320, 160):
+
+```
+minChunkX = floor(-160 / 16) = -10
+minChunkZ = floor(-160 / 16) = -10
+maxChunkX = floor(160 / 16) = 10
+maxChunkZ = floor(160 / 16) = 10
+```
+
+<Note>
+The Y coordinate (height) is not used in pruning. Pruning removes entire vertical columns of chunks.
+</Note>
+
+## Usage
+
+<CodeGroup>
+```bash World Folder
+# Place in world directory
+my_world/pruning.chunker.json
+
+# Run conversion
+java -jar chunker-cli.jar -i my_world -f BEDROCK_1_20_80 -o output
+```
+
+```bash CLI Flag
+java -jar chunker-cli.jar \
+  -i my_world \
+  -f BEDROCK_1_20_80 \
+  -o output \
+  -p pruning.json
+```
+
+```bash Inline JSON
+java -jar chunker-cli.jar \
+  -i my_world \
+  -f BEDROCK_1_20_80 \
+  -o output \
+  -p '{"configs": [{"include": true, "regions": [{"minChunkX": -10, "minChunkZ": -10, "maxChunkX": 10, "maxChunkZ": 10}]}, null, null]}'
+```
+</CodeGroup>
+
+## Region Selection Strategies
+
+### Include Strategy (Whitelist)
+
+When `"include": true`:
+
+- Chunks **inside** defined regions are **kept**
+- Chunks **outside** defined regions are **removed**
+- Best for: Keeping specific areas (spawn, builds, etc.)
+
+### Exclude Strategy (Blacklist)
+
+When `"include": false`:
+
+- Chunks **inside** defined regions are **removed**
+- Chunks **outside** defined regions are **kept**
+- Best for: Removing unwanted areas (grief, corruption, etc.)
+
+## Performance Considerations
+
+<Note>
+Pruning is performed during the read phase of conversion, so pruned chunks are never processed. This saves:
+
+- Conversion time
+- Memory usage
+- Output file size
+</Note>
+
+### File Size Reduction
+
+Pruning can significantly reduce world size:
+
+- Small spawn area: 90-95% size reduction
+- Multiple regions: 50-80% size reduction
+- Removing unused dimensions: 30-60% size reduction
+
+## Best Practices
+
+1. **Always backup** your world before pruning
+2. **Test first** with a copy of your world
+3. **Use visualization tools** to identify chunk coordinates
+4. **Buffer regions** by 1-2 chunks to avoid cutting off structures
+5. **Check dimension IDs** to ensure correct pruning order
+
+## Visualization Tools
+
+To help identify regions to prune:
+
+- **Minecraft**: Press F3+G to show chunk boundaries
+- **External tools**: Use MCA Selector, Amulet, or similar
+- **Coordinates**: F3 shows both block and chunk coordinates
+
+## Common Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Server Spawn" icon="house">
+    Keep only spawn and hub areas for smaller server worlds
+  </Card>
+  <Card title="Mini-games" icon="gamepad">
+    Extract specific arenas or game areas
+  </Card>
+  <Card title="Showcases" icon="star">
+    Create compact worlds featuring specific builds
+  </Card>
+  <Card title="Testing" icon="flask">
+    Generate small test worlds from production servers
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Wrong area removed">
+    - Verify chunk coordinates (not block coordinates)
+    - Check include vs exclude logic
+    - Ensure dimension order is correct
+  </Accordion>
+  
+  <Accordion title="Nothing pruned">
+    - Check that configs array is not empty
+    - Verify regions array has entries
+    - Ensure dimension index matches intended dimension
+  </Accordion>
+  
+  <Accordion title="Conversion fails with pruning error">
+    - Validate JSON syntax
+    - Ensure minChunk values are less than maxChunk values
+    - Check that configs array has exactly 3 elements or fewer
+  </Accordion>
+  
+  <Accordion title="Structure cut off">
+    - Expand region boundaries by 1-2 chunks
+    - Structures can span multiple chunks
+    - Check if structure extends beyond defined region
+  </Accordion>
+</AccordionGroup>
+
+## Empty Configs
+
+An empty configs array means no pruning:
+
+```json
+{
+  "configs": []
+}
+```
+
+<Note>
+This is equivalent to not having a pruning configuration file.
+</Note>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Configuration Overview" icon="gear" href="/advanced/configuration">
+    Learn about all configuration options
+  </Card>
+  <Card title="Converter Settings" icon="sliders" href="/advanced/converter-settings">
+    Control what gets converted
+  </Card>
+  <Card title="Dimension Mapping" icon="layer-group" href="/api/dimension-mapping">
+    Map dimensions between editions
+  </Card>
+</CardGroup>

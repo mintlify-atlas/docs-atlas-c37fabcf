@@ -1,0 +1,332 @@
+---
+title: 'MappingsFile API'
+description: 'Custom block and item mappings for world conversion'
+icon: 'map'
+---
+
+## Overview
+
+The `MappingsFile` class provides a powerful API for customizing how blocks and items are converted between Java and Bedrock editions. It uses a JSON-based format with three main components: identifier mappings, state mappings, and type mappings.
+
+## Class: MappingsFile
+
+**Package:** `com.hivemc.chunker.mapping`
+
+```java
+public class MappingsFile
+```
+
+Represents a JSON formatted file which contains mappings that can turn item/block identifiers into another.
+
+### Components
+
+<CardGroup cols={3}>
+  <Card title="Identifier Mappings" icon="fingerprint">
+    Turn an identifier into another and can introduce or filter based on old_state_values/new_state_values
+  </Card>
+  <Card title="State Mappings" icon="list">
+    Groups of states commonly used together (e.g., all stairs)
+  </Card>
+  <Card title="Type Mappings" icon="arrows-left-right">
+    Mapping of input values to output values
+  </Card>
+</CardGroup>
+
+## Loading Mappings
+
+### load(File file)
+
+Load a MappingsFile from a JSON file.
+
+<ParamField path="file" type="File" required>
+  The input JSON file in the format of a mappings file
+</ParamField>
+
+<ResponseField name="return" type="MappingsFile">
+  The loaded MappingsFile
+</ResponseField>
+
+```java
+MappingsFile mappings = MappingsFile.load(new File("custom_mappings.json"));
+```
+
+### load(String json)
+
+Load a MappingsFile from a JSON string.
+
+<ParamField path="json" type="String" required>
+  The input JSON in the format of a mappings file
+</ParamField>
+
+<ResponseField name="return" type="MappingsFile">
+  The loaded MappingsFile
+</ResponseField>
+
+```java
+String json = "{\"identifiers\": [], \"state_lists\": {}, \"types\": {}}";
+MappingsFile mappings = MappingsFile.load(json);
+```
+
+### load(JsonElement jsonElement)
+
+Load a MappingsFile from a JsonElement.
+
+<ParamField path="jsonElement" type="JsonElement" required>
+  The input element in the format of a mappings file
+</ParamField>
+
+<ResponseField name="return" type="MappingsFile">
+  The loaded MappingsFile
+</ResponseField>
+
+## Converting Identifiers
+
+### convertBlock(Identifier inputBlock)
+
+Convert an input block identifier using this mappings file.
+
+<ParamField path="inputBlock" type="Identifier" required>
+  The input block identifier to convert
+</ParamField>
+
+<ResponseField name="return" type="Optional<Identifier>">
+  Empty if there is no mapping found, otherwise an output identifier based on the mappings
+</ResponseField>
+
+```java
+Identifier inputBlock = new Identifier("minecraft:wool", states);
+Optional<Identifier> outputBlock = mappings.convertBlock(inputBlock);
+```
+
+### convertItem(Identifier inputItem, boolean fallback)
+
+Convert an input item identifier using this mappings file.
+
+<ParamField path="inputItem" type="Identifier" required>
+  The input item identifier to convert
+</ParamField>
+
+<ParamField path="fallback" type="boolean" required>
+  Whether the block mappings should be tested if the item is not found
+</ParamField>
+
+<ResponseField name="return" type="Optional<Identifier>">
+  Empty if there is no mapping found, otherwise an output identifier based on the mappings
+</ResponseField>
+
+### convertItem(Identifier inputItem)
+
+Convert an input item identifier using this mappings file with block mappings as a fallback.
+
+<ParamField path="inputItem" type="Identifier" required>
+  The input item identifier to convert
+</ParamField>
+
+<ResponseField name="return" type="Optional<Identifier>">
+  Empty if there is no mapping found, otherwise an output identifier based on the mappings
+</ResponseField>
+
+## Accessors
+
+### getTypeMappings()
+
+<ResponseField name="return" type="Map<String, TypeMappings>">
+  The type mappings lookup used for converting types
+</ResponseField>
+
+### getStateMappings()
+
+<ResponseField name="return" type="Map<String, StateMappings>">
+  The state mappings lookup used for converting different groupings of states
+</ResponseField>
+
+### getBlockIdentifierLookup()
+
+<ResponseField name="return" type="Map<String, IdentifierMappings>">
+  The block lookup used for converting block identifiers
+</ResponseField>
+
+### getItemIdentifierLookup()
+
+<ResponseField name="return" type="Map<String, IdentifierMappings>">
+  The item lookup used for converting item identifiers
+</ResponseField>
+
+## Advanced Operations
+
+### inverse()
+
+Generate the inverse of the current mapping file, where the current file is A → B, the result is B → A.
+
+<ResponseField name="return" type="MappingsFile">
+  A copy of the current mappings inverted to allow backwards mapping
+</ResponseField>
+
+```java
+// Create inverse mappings for reverse conversion
+MappingsFile inverseMappings = mappings.inverse();
+```
+
+### toJson() / toJsonString()
+
+Convert the MappingsFile into a JSON representation.
+
+<ResponseField name="toJson()" type="JsonElement">
+  The JSON element representation of these mappings
+</ResponseField>
+
+<ResponseField name="toJsonString()" type="String">
+  The JSON string representation (pretty-printed) of these mappings
+</ResponseField>
+
+```java
+String jsonOutput = mappings.toJsonString();
+```
+
+## Special States
+
+### isSpecialState(String stateName)
+
+Check whether a state is marked as special. Special states are used to hold additional data which should persist through conversion.
+
+<ParamField path="stateName" type="String" required>
+  The state name to check
+</ParamField>
+
+<ResponseField name="return" type="boolean">
+  True if the state begins with `meta:` or `virtual:`
+</ResponseField>
+
+- `meta:` - Used to attach additional metadata to a state
+- `virtual:` - Used to provide state data which does not have parity and is inferred by Chunker
+
+## JSON Format Example
+
+Example which changes wool from orange to red:
+
+```json
+{
+  "identifiers": [
+    {
+      "old_identifier": "minecraft:wool",
+      "new_identifier": "minecraft:wool",
+      "state_list": "wool"
+    }
+  ],
+  "state_lists": {
+    "wool": [
+      {
+        "old_state": "color",
+        "new_state": "color",
+        "type": "color_changer"
+      }
+    ]
+  },
+  "types": {
+    "color_changer": [
+      {
+        "input": "orange",
+        "output": "red"
+      }
+    ]
+  }
+}
+```
+
+## CLI Integration
+
+Mappings can be provided to the CLI using the `--blockMappings` parameter:
+
+<CodeGroup>
+```bash File Path
+java -jar Chunker.jar \
+  --inputDirectory myWorld \
+  --outputFormat JAVA_1_20_5 \
+  --outputDirectory converted \
+  --blockMappings custom_mappings.json
+```
+
+```bash JSON Object
+java -jar Chunker.jar \
+  --inputDirectory myWorld \
+  --outputFormat JAVA_1_20_5 \
+  --outputDirectory converted \
+  --blockMappings '{"identifiers":[], "state_lists":{}, "types":{}}'
+```
+
+```bash Auto-load from World
+# Place file as: myWorld/block_mappings.chunker.json
+java -jar Chunker.jar \
+  --inputDirectory myWorld \
+  --outputFormat JAVA_1_20_5 \
+  --outputDirectory converted
+```
+</CodeGroup>
+
+## Programmatic Usage
+
+Integrate custom mappings into the WorldConverter:
+
+```java
+import com.hivemc.chunker.mapping.MappingsFile;
+import com.hivemc.chunker.mapping.resolver.MappingsFileResolvers;
+import com.hivemc.chunker.conversion.WorldConverter;
+
+// Load custom mappings
+MappingsFile mappingsFile = MappingsFile.load(new File("custom_mappings.json"));
+
+// Create converter
+WorldConverter worldConverter = new WorldConverter(UUID.randomUUID());
+
+// Apply custom mappings
+worldConverter.setBlockMappings(new MappingsFileResolvers(mappingsFile));
+```
+
+## Custom Block Handler
+
+The constant `CUSTOM_BLOCK_HANDLER` (`"$custom_block"`) can be used as a special identifier to handle custom (non-vanilla) blocks:
+
+```json
+{
+  "identifiers": [
+    {
+      "old_identifier": "$custom_block",
+      "new_identifier": "minecraft:stone",
+      "state_list": ""
+    }
+  ]
+}
+```
+
+This will convert all custom blocks to stone. Custom blocks are any blocks not in the `minecraft:` namespace.
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use state_list for reusable mappings">
+    Group similar blocks (like stairs, slabs) that share state transformations into reusable state_lists.
+  </Accordion>
+  
+  <Accordion title="Test with small worlds first">
+    Always test your custom mappings on a small test world before applying to your main world.
+  </Accordion>
+  
+  <Accordion title="Preserve special states">
+    Special states (meta: and virtual:) are automatically preserved through conversion - use them for custom metadata.
+  </Accordion>
+  
+  <Accordion title="Use inverse() for round-trip testing">
+    Generate inverse mappings to verify your mappings work in both directions.
+  </Accordion>
+</AccordionGroup>
+
+## Related APIs
+
+<CardGroup cols={2}>
+  <Card title="Dimension Mapping" icon="globe" href="/api/dimension-mapping">
+    Configure dimension conversion between editions
+  </Card>
+  <Card title="Pruning Config" icon="scissors" href="/api/pruning-config">
+    Control which world regions to keep or remove
+  </Card>
+</CardGroup>
